@@ -1,0 +1,25 @@
+{
+  "name": "Control trabajadores",
+  "short_name": "Control Obras",
+  "description": "Aplicación para gestión de trabajadores y obras",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1565C0",
+  "theme_color": "#1565C0",
+  "orientation": "portrait",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231565C0'/%3E%3Cpath d='M-8,-6.5 L-7.25,-2.57 L-6.51,1.36 L-5.76,5.29 L-5.53,6.52 L-8,-6.5 L-4,-6.5 L0,-6.5 L4,-6.5 L8,-6.5 L-5.53,6.52 L-2.55,3.86 L0.42,1.21 L3.4,-1.45 L6.38,-4.11 L6.49,-4.19 L-5.53,6.52 L-2.27,4.22 L0.99,1.92 L4.24,-0.37 L7.5,2.77 L8,3.26 L6.49,-4.19 L6.74,-0.2 L6.98,3.8 L7.23,7.79 L7.23,7.81 L6.49,-4.19 L6.74,-0.26 L6.98,3.26 L7.23,7.19 L7.23,7.81' stroke='white' fill='none' stroke-width='3' transform='translate(50, 50) scale(2.5)' /%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231565C0'/%3E%3Cpath d='M-8,-6.5 L-7.25,-2.57 L-6.51,1.36 L-5.76,5.29 L-5.53,6.52 L-8,-6.5 L-4,-6.5 L0,-6.5 L4,-6.5 L8,-6.5 L-5.53,6.52 L-2.55,3.86 L0.42,1.21 L3.4,-1.45 L6.38,-4.11 L6.49,-4.19 L-5.53,6.52 L-2.27,4.22 L0.99,1.92 L4.24,-0.37 L7.5,2.77 L8,3.26 L6.49,-4.19 L6.74,-0.2 L6.98,3.8 L7.23,7.79 L7.23,7.81 L6.49,-4.19 L6.74,-0.26 L6.98,3.26 L7.23,7.19 L7.23,7.81' stroke='white' fill='none' stroke-width='4' transform='translate(50, 50) scale(3)' /%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

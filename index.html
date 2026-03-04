@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Control trabajadores</title>
+
+<!-- PARA PWA -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1565C0">
+<link rel="manifest" href="manifest.json">
+
+<!-- PARA IPHONE -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Control trabajadores">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#ECEFF1;max-width:430px;margin:0 auto;min-height:100vh;}
+
+/* PANTALLA DE CARGA */
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg,#1565C0,#1976D2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 1000;
+  transition: opacity 0.5s;
+}
+.splash-screen.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+.splash-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+  animation: bounce 1s infinite;
+}
+.splash-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+.splash-sub {
+  font-size: 14px;
+  opacity: 0.9;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* CONTENIDO PRINCIPAL */
+.app-bar{background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;padding:15px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+.app-bar h1{font-size:19px;font-weight:700;}
+.app-sub{font-size:11px;opacity:.8;margin-top:1px;}
+.tabs{background:#0D47A1;display:flex;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:1;min-width:72px;padding:11px 4px 10px;text-align:center;color:rgba(255,255,255,.6);font-size:10.5px;cursor:pointer;border-bottom:3px solid transparent;text-transform:uppercase;font-weight:700;letter-spacing:.4px;transition:all .2s;}
+.tab.active{color:#fff;border-bottom-color:#FFD54F;}
+.content{display:none;padding:14px;padding-bottom:90px;}
+.content.active{display:block;}
+.card{background:#fff;border-radius:12px;margin-bottom:12px;box-shadow:0 1px 5px rgba(0,0,0,.1);overflow:hidden;}
+.card-header{background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;padding:12px 15px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+.hchip{background:rgba(255,255,255,.2);padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;}
+.worker-item{display:flex;align-items:center;padding:11px 13px;border-bottom:1px solid #F0F4F8;gap:11px;}
+.worker-item:last-child{border-bottom:none;}
+.avatar{width:42px;height:42px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;font-size:15px;}
+.obra-badge{background:#E3F2FD;color:#1565C0;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+.btn-icon{background:none;border:none;cursor:pointer;padding:6px;font-size:16px;border-radius:50%;}
+.fab{position:fixed;bottom:78px;right:max(16px,calc(50vw - 215px + 16px));width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#FF6F00,#FF8F00);color:#fff;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 14px rgba(255,111,0,.5);z-index:50;display:flex;align-items:center;justify-content:center;}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;display:flex;border-top:1px solid #E0E0E0;box-shadow:0 -2px 10px rgba(0,0,0,.08);z-index:100;padding-bottom:env(safe-area-inset-bottom, 0);}
+.nav-item{flex:1;padding:9px 2px 7px;text-align:center;cursor:pointer;color:#9E9E9E;}
+.nav-item.active{color:#1565C0;}
+.nav-icon{font-size:21px;line-height:1;}
+.nav-label{font-size:10px;margin-top:2px;font-weight:600;}
+
+/* Modales */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:22px 20px 28px;max-height:92vh;overflow-y:auto;animation:slideUp .25s ease;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h2{font-size:17px;font-weight:800;margin-bottom:18px;color:#1A237E;}
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:11px;color:#78909C;margin-bottom:5px;text-transform:uppercase;font-weight:700;letter-spacing:.4px;}
+.fg input,.fg select{width:100%;padding:11px 12px;border:1.5px solid #E0E0E0;border-radius:9px;font-size:15px;outline:none;background:#FAFAFA;}
+.fg input:focus,.fg select:focus{border-color:#1565C0;background:#fff;}
+.modal-btns{display:flex;gap:10px;margin-top:18px;}
+.btn{flex:1;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;border:none;}
+.btn-cancel{background:#EEE;color:#424242;}
+.btn-primary{background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;}
+.btn-danger{background:linear-gradient(135deg,#C62828,#D32F2F);color:#fff;}
+
+/* Calendario */
+.cal-wrap{background:#fff;border-radius:12px;box-shadow:0 1px 5px rgba(0,0,0,.1);overflow:hidden;}
+.cal-header{background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;padding:13px 14px;display:flex;justify-content:space-between;align-items:center;}
+.cal-nav{background:none;border:none;color:#fff;font-size:24px;cursor:pointer;padding:2px 10px;border-radius:50%;}
+.cal-grid{padding:10px 8px;}
+.cal-dh{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:5px;}
+.cal-dh span{font-size:11px;color:#90A4AE;font-weight:800;padding:3px 0;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:13px;cursor:pointer;color:#37474F;font-weight:500;position:relative;}
+.cal-day:hover:not(.empty){background:#E3F2FD;}
+.cal-day.empty{cursor:default;}
+.cal-day.today{color:#1565C0;font-weight:800;}
+.cal-day.selected{background:#1565C0!important;color:#fff!important;}
+.cal-day.has-w::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#FF6F00;}
+.day-panel{background:#fff;border-radius:12px;box-shadow:0 1px 5px rgba(0,0,0,.1);margin-top:12px;overflow:hidden;}
+.day-panel-hdr{background:#37474F;color:#fff;padding:11px 14px;font-size:13px;font-weight:700;}
+.empty-state{padding:24px;text-align:center;color:#B0BEC5;font-size:14px;}
+
+/* Selectores */
+.obra-sel-wrap, .trabajador-sel-wrap{position:relative;margin-bottom:14px;}
+.obra-sel-wrap select, .trabajador-sel-wrap select{width:100%;padding:13px 36px 13px 14px;border:2px solid #1565C0;border-radius:11px;font-size:15px;background:#fff;appearance:none;cursor:pointer;font-weight:700;color:#1A237E;}
+.obra-sel-wrap::after, .trabajador-sel-wrap::after{content:'▾';position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#1565C0;pointer-events:none;font-size:15px;}
+
+/* Resumen con botón Gmail */
+.resumen-header{background:linear-gradient(135deg,#1B5E20,#2E7D32);color:#fff;padding:13px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:12px;margin-bottom:12px;}
+.resumen-nav{background:none;border:none;color:#fff;font-size:24px;cursor:pointer;padding:2px 10px;border-radius:50%;}
+.resumen-actions{display:flex;gap:8px;margin-bottom:12px;}
+.btn-gmail{background:#EA4335;color:white;border:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;flex:1;box-shadow:0 2px 8px rgba(234,67,53,.3);}
+.btn-gmail:hover{background:#D33828;}
+.btn-gmail:active{transform:scale(0.98);}
+.resumen-lista-trabajadores{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,.1);}
+.trabajador-resumen{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid #F0F4F8;cursor:pointer;}
+.trabajador-resumen:last-child{border-bottom:none;}
+.trabajador-resumen:hover{background:#F5F9FF;}
+.trabajador-resumen.activo{background:#E3F2FD;border-left:4px solid #1565C0;}
+.trabajador-info{flex:1;margin-left:10px;}
+.trabajador-nombre{font-size:14px;font-weight:700;}
+.trabajador-total{font-size:12px;color:#78909C;margin-top:2px;}
+.obra-detalle{background:#fff;border-radius:12px;margin-top:8px;margin-left:60px;margin-right:14px;margin-bottom:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);}
+.obra-detalle-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.obra-detalle-nombre{font-weight:700;font-size:13px;flex:1;}
+.obra-detalle-total{color:#1565C0;font-weight:800;font-size:13px;}
+.dias-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.dia-chip{background:#E3F2FD;color:#1565C0;padding:5px 10px;border-radius:15px;font-size:12px;font-weight:600;}
+.dia-chip.hoy{background:#1565C0;color:#fff;}
+
+/* Toast y loading */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:400;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+.loading{text-align:center;padding:20px;color:#1565C0;}
+
+/* GUÍA DE INSTALACIÓN */
+.install-guide {
+  background: #FFF3E0;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-left: 4px solid #FF6F00;
+  display: none;
+}
+.install-guiderow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.install-guiderow:last-child {
+  margin-bottom: 0;
+}
+.install-guide-icon {
+  font-size: 32px;
+  min-width: 48px;
+  text-align: center;
+}
+.install-guide-text {
+  flex: 1;
+  color: #E65100;
+  font-weight: 600;
+  font-size: 14px;
+}
+.install-guide-steps {
+  background: white;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+}
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #FFE0B2;
+}
+.step:last-child {
+  border-bottom: none;
+}
+.step-number {
+  background: #FF6F00;
+  color: white;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+.step-text {
+  flex: 1;
+}
+.install-guide-close {
+  background: #FF6F00;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 10px;
+}
+</style>
+</head>
+<body>
+
+<!-- PANTALLA DE CARGA (SPLASH SCREEN) -->
+<div class="splash-screen" id="splash">
+  <div class="splash-icon">🏗️</div>
+  <div class="splash-title">Control trabajadores</div>
+  <div class="splash-sub">Cargando...</div>
+</div>
+
+<div class="app-bar">
+  <span style="font-size:24px;">🏗️</span>
+  <div>
+    <h1>Control trabajadores</h1>
+    <div class="app-sub" id="app-sub">Cargando...</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('trabajadores')">👷 Trabajadores</div>
+  <div class="tab" onclick="showTab('obras')">📅 Obras</div>
+  <div class="tab" onclick="showTab('resumen')">📊 Resumen</div>
+  <div class="tab" onclick="showTab('gestion')">⚙️ Gestión</div>
+</div>
+
+<!-- GUÍA DE INSTALACIÓN -->
+<div class="install-guide" id="installGuide">
+  <div class="install-guiderow">
+    <span class="install-guide-icon">📱</span>
+    <span class="install-guide-text">¡Instala esta app en tu móvil!</span>
+  </div>
+  
+  <div class="install-guide-steps">
+    <div class="step">
+      <span class="step-number">1</span>
+      <span class="step-text">En <strong>Chrome</strong>, pulsa el menú <strong>⋮</strong></span>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>
+      <span class="step-text">Busca y pulsa <strong>"Añadir a pantalla de inicio"</strong></span>
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>
+      <span class="step-text">Ponle nombre y pulsa <strong>"Añadir"</strong></span>
+    </div>
+  </div>
+  
+  <button class="install-guide-close" onclick="cerrarGuia()">Entendido</button>
+</div>
+
+<!-- PESTAÑA TRABAJADORES -->
+<div id="tab-trabajadores" class="content active">
+  <div style="font-size:13px;color:#546E7A;margin-bottom:10px;" id="today-lbl"></div>
+  <div class="card">
+    <div class="card-header"><span>Lista de Trabajadores</span><span id="wcount" class="hchip">0</span></div>
+    <div id="workers-list"></div>
+  </div>
+</div>
+
+<!-- PESTAÑA OBRAS -->
+<div id="tab-obras" class="content">
+  <div class="obra-sel-wrap">
+    <select id="obra-filter" onchange="renderCalendar()">
+      <option value="">— Selecciona una obra —</option>
+    </select>
+  </div>
+  
+  <div class="trabajador-sel-wrap">
+    <select id="trabajador-select">
+      <option value="">— Selecciona trabajador —</option>
+    </select>
+  </div>
+  
+  <div style="display:flex; gap:8px; margin-bottom:14px;">
+    <input type="date" id="asignacion-fecha" style="flex:2; padding:11px 12px; border:1.5px solid #E0E0E0; border-radius:9px; font-size:15px;">
+    <button class="btn btn-primary" style="flex:1; padding:11px;" onclick="asignarTrabajadorAObra()">Asignar</button>
+  </div>
+  
+  <div class="cal-wrap">
+    <div class="cal-header">
+      <button class="cal-nav" onclick="cambiarMes(-1)">‹</button>
+      <span id="cal-lbl"></span>
+      <button class="cal-nav" onclick="cambiarMes(1)">›</button>
+    </div>
+    <div class="cal-grid">
+      <div class="cal-dh">
+        <span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sa</span><span>Do</span>
+      </div>
+      <div class="cal-days" id="cal-days"></div>
+    </div>
+  </div>
+  
+  <div class="day-panel">
+    <div class="day-panel-hdr" id="dw-title">Selecciona un día</div>
+    <div id="dw-list"></div>
+  </div>
+</div>
+
+<!-- PESTAÑA RESUMEN CON BOTÓN GMAIL -->
+<div id="tab-resumen" class="content">
+  <div class="resumen-header">
+    <button class="resumen-nav" onclick="cambiarMesResumen(-1)">‹</button>
+    <div style="text-align:center;">
+      <div style="font-size:16px;font-weight:800;" id="res-mes"></div>
+      <div style="font-size:11px;" id="res-total"></div>
+    </div>
+    <button class="resumen-nav" onclick="cambiarMesResumen(1)">›</button>
+  </div>
+  
+  <!-- BOTÓN DE ENVIO POR GMAIL -->
+  <div class="resumen-actions">
+    <button class="btn-gmail" onclick="enviarPorGmail()">
+      <span>📧</span> Enviar resumen por Gmail
+    </button>
+  </div>
+  
+  <div id="resumen-contenido"></div>
+</div>
+
+<!-- PESTAÑA GESTIÓN -->
+<div id="tab-gestion" class="content">
+  <div class="card">
+    <div class="card-header">
+      <span>Obras</span>
+      <button onclick="abrirModalObra()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 13px;border-radius:14px;cursor:pointer;">+ Nueva</button>
+    </div>
+    <div id="obras-list"></div>
+  </div>
+</div>
+
+<button class="fab" id="fab" onclick="abrirModalTrabajador()">＋</button>
+
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="showTab('trabajadores')"><div class="nav-icon">👷</div><div class="nav-label">Trabajadores</div></div>
+  <div class="nav-item" onclick="showTab('obras')"><div class="nav-icon">📅</div><div class="nav-label">Obras</div></div>
+  <div class="nav-item" onclick="showTab('resumen')"><div class="nav-icon">📊</div><div class="nav-label">Resumen</div></div>
+  <div class="nav-item" onclick="showTab('gestion')"><div class="nav-icon">⚙️</div><div class="nav-label">Gestión</div></div>
+</div>
+
+<!-- Modal Trabajador -->
+<div class="modal-overlay" id="modal-trabajador">
+  <div class="modal">
+    <h2 id="modal-titulo">Añadir Trabajador</h2>
+    <div class="fg"><label>Nombre</label><input id="w-nombre" placeholder="Nombre"></div>
+    <div class="fg"><label>Apellidos</label><input id="w-apellidos" placeholder="Apellidos"></div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="cerrarModal('modal-trabajador')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarTrabajador()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Obra -->
+<div class="modal-overlay" id="modal-obra">
+  <div class="modal">
+    <h2 id="modal-obra-titulo">Nueva Obra</h2>
+    <div class="fg"><label>Nombre</label><input id="o-nombre" placeholder="Nombre de la obra"></div>
+    <div class="fg"><label>Dirección</label><input id="o-direccion" placeholder="Dirección"></div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="cerrarModal('modal-obra')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarObra()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Datos iniciales
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const COLORES = ['#1565C0','#2E7D32','#6A1B9A','#E65100','#00838F','#AD1457','#C62828','#0277BD','#4A148C','#33691E'];
+
+// Estado de la aplicación
+let obras = [
+  {id:1, nombre:'Edificio Centro', direccion:'C/ Mayor 10'},
+  {id:2, nombre:'Nave Industrial', direccion:'Pol. Norte'},
+  {id:3, nombre:'Viviendas Sur', direccion:'Av. Andalucía 45'}
+];
+let trabajadores = [
+  {id:1, nombre:'Carlos', apellidos:'García'},
+  {id:2, nombre:'María', apellidos:'Martínez'},
+  {id:3, nombre:'José', apellidos:'Fernández'}
+];
+let asignaciones = [
+  {trabajadorId:1, obraId:1, fecha:new Date().toISOString().split('T')[0]},
+  {trabajadorId:2, obraId:2, fecha:new Date().toISOString().split('T')[0]},
+  {trabajadorId:3, obraId:3, fecha:new Date().toISOString().split('T')[0]}
+];
+
+let siguienteIdTrabajador = 10;
+let siguienteIdObra = 10;
+let fechaActual = new Date().toISOString().split('T')[0];
+let añoCalendario = new Date().getFullYear();
+let mesCalendario = new Date().getMonth();
+let fechaSeleccionada = fechaActual;
+let añoResumen = new Date().getFullYear();
+let mesResumen = new Date().getMonth();
+let trabajadorSeleccionado = null;
+let editandoTrabajadorId = null;
+let editandoObraId = null;
+
+// Detectar si está instalada como app
+function isRunningStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         window.navigator.standalone === true ||
+         document.referrer.includes('android-app://');
+}
+
+// Ocultar splash screen
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    document.getElementById('splash').classList.add('hide');
+  }, 1000);
+  
+  if (!isRunningStandalone() && !localStorage.getItem('guia_instalacion_cerrada')) {
+    document.getElementById('installGuide').style.display = 'block';
+  }
+});
+
+// Utilidades
+function guardarEnStorage() {
+  localStorage.setItem('app_obras', JSON.stringify({
+    obras, trabajadores, asignaciones, siguienteIdTrabajador, siguienteIdObra
+  }));
+}
+
+function cargarStorage() {
+  try {
+    const datos = localStorage.getItem('app_obras');
+    if (datos) {
+      const parsed = JSON.parse(datos);
+      obras = parsed.obras || obras;
+      trabajadores = parsed.trabajadores || trabajadores;
+      asignaciones = parsed.asignaciones || asignaciones;
+      siguienteIdTrabajador = parsed.siguienteIdTrabajador || 10;
+      siguienteIdObra = parsed.siguienteIdObra || 10;
+    }
+  } catch(e) {}
+}
+
+cargarStorage();
+
+function mostrarToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+function formatearFecha(fecha) {
+  if (!fecha) return '';
+  const [y,m,d] = fecha.split('-');
+  return `${+d} de ${MESES[+m-1]} de ${y}`;
+}
+
+function iniciales(n, a) {
+  return ((n || '')[0] || '') + ((a || '')[0] || '').toUpperCase();
+}
+
+function nombreObra(id) {
+  const o = obras.find(o => o.id == id);
+  return o ? o.nombre : 'Sin asignar';
+}
+
+function colorObra(id) {
+  if (!id) return '#78909C';
+  const i = obras.findIndex(o => o.id == id);
+  return COLORES[i % COLORES.length];
+}
+
+function getAsignacion(trabajadorId, fecha) {
+  const a = asignaciones.find(a => a.trabajadorId === trabajadorId && a.fecha === fecha);
+  return a ? a.obraId : null;
+}
+
+function setAsignacion(trabajadorId, obraId, fecha) {
+  const existente = asignaciones.find(a => a.trabajadorId === trabajadorId && a.fecha === fecha);
+  if (existente) {
+    if (obraId) {
+      existente.obraId = obraId;
+    } else {
+      asignaciones = asignaciones.filter(a => !(a.trabajadorId === trabajadorId && a.fecha === fecha));
+    }
+  } else if (obraId) {
+    asignaciones.push({trabajadorId, obraId, fecha});
+  }
+  guardarEnStorage();
+}
+
+// Cerrar guía
+function cerrarGuia() {
+  document.getElementById('installGuide').style.display = 'none';
+  localStorage.setItem('guia_instalacion_cerrada', 'true');
+}
+
+// Tabs
+function showTab(tab) {
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  document.querySelector(`.tab[onclick="showTab('${tab}')"]`).classList.add('active');
+  document.querySelector(`.nav-item[onclick="showTab('${tab}')"]`).classList.add('active');
+  
+  document.getElementById('fab').style.display = (tab === 'gestion' || tab === 'resumen') ? 'none' : 'flex';
+  
+  if (tab === 'obras') {
+    llenarSelectTrabajadores();
+    document.getElementById('asignacion-fecha').value = fechaActual;
+  }
+  if (tab === 'resumen') renderResumen();
+}
+
+// Trabajadores
+function renderTrabajadores() {
+  const lista = document.getElementById('workers-list');
+  const total = document.getElementById('wcount');
+  
+  total.textContent = trabajadores.length + ' trabajador' + (trabajadores.length !== 1 ? 'es' : '');
+  
+  if (!trabajadores.length) {
+    lista.innerHTML = '<div class="empty-state">Pulsa ＋ para añadir trabajadores</div>';
+    return;
+  }
+  
+  lista.innerHTML = trabajadores.map(t => {
+    const obraId = getAsignacion(t.id, fechaActual);
+    return `
+      <div class="worker-item">
+        <div class="avatar" style="background:${colorObra(obraId)}">${iniciales(t.nombre, t.apellidos)}</div>
+        <div style="flex:1">
+          <div style="font-weight:700">${t.nombre} ${t.apellidos}</div>
+          <span class="obra-badge">${nombreObra(obraId)}</span>
+        </div>
+        <button class="btn-icon" onclick="editarTrabajador(${t.id})">✏️</button>
+        <button class="btn-icon" onclick="eliminarTrabajador(${t.id})">🗑️</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function abrirModalTrabajador() {
+  editandoTrabajadorId = null;
+  document.getElementById('modal-titulo').textContent = 'Añadir Trabajador';
+  document.getElementById('w-nombre').value = '';
+  document.getElementById('w-apellidos').value = '';
+  abrirModal('modal-trabajador');
+}
+
+function editarTrabajador(id) {
+  const t = trabajadores.find(t => t.id === id);
+  if (!t) return;
+  editandoTrabajadorId = id;
+  document.getElementById('modal-titulo').textContent = 'Editar Trabajador';
+  document.getElementById('w-nombre').value = t.nombre;
+  document.getElementById('w-apellidos').value = t.apellidos;
+  abrirModal('modal-trabajador');
+}
+
+function guardarTrabajador() {
+  const nombre = document.getElementById('w-nombre').value.trim();
+  const apellidos = document.getElementById('w-apellidos').value.trim();
+  
+  if (!nombre || !apellidos) {
+    mostrarToast('⚠️ Nombre y apellidos son obligatorios');
+    return;
+  }
+  
+  if (editandoTrabajadorId) {
+    const t = trabajadores.find(t => t.id === editandoTrabajadorId);
+    t.nombre = nombre;
+    t.apellidos = apellidos;
+    mostrarToast('✅ Trabajador actualizado');
+  } else {
+    trabajadores.push({
+      id: siguienteIdTrabajador++,
+      nombre,
+      apellidos
+    });
+    mostrarToast('✅ Trabajador añadido');
+  }
+  
+  cerrarModal('modal-trabajador');
+  renderTodo();
+}
+
+function eliminarTrabajador(id) {
+  if (confirm('¿Eliminar trabajador? También se borrarán sus asignaciones.')) {
+    trabajadores = trabajadores.filter(t => t.id !== id);
+    asignaciones = asignaciones.filter(a => a.trabajadorId !== id);
+    guardarEnStorage();
+    renderTodo();
+    mostrarToast('🗑️ Trabajador eliminado');
+  }
+}
+
+// Asignaciones desde pestaña Obras
+function llenarSelectTrabajadores() {
+  const select = document.getElementById('trabajador-select');
+  select.innerHTML = '<option value="">— Selecciona trabajador —</option>' + 
+    trabajadores.map(t => `<option value="${t.id}">${t.nombre} ${t.apellidos}</option>`).join('');
+}
+
+function asignarTrabajadorAObra() {
+  const obraId = parseInt(document.getElementById('obra-filter').value);
+  const trabajadorId = parseInt(document.getElementById('trabajador-select').value);
+  const fecha = document.getElementById('asignacion-fecha').value;
+  
+  if (!obraId) {
+    mostrarToast('⚠️ Selecciona una obra');
+    return;
+  }
+  
+  if (!trabajadorId) {
+    mostrarToast('⚠️ Selecciona un trabajador');
+    return;
+  }
+  
+  if (!fecha) {
+    mostrarToast('⚠️ Selecciona una fecha');
+    return;
+  }
+  
+  setAsignacion(trabajadorId, obraId, fecha);
+  renderCalendar();
+  mostrarToast('✅ Trabajador asignado a la obra');
+  
+  document.getElementById('trabajador-select').value = '';
+}
+
+// Obras
+function renderObras() {
+  const lista = document.getElementById('obras-list');
+  
+  if (!obras.length) {
+    lista.innerHTML = '<div class="empty-state">No hay obras registradas</div>';
+    return;
+  }
+  
+  lista.innerHTML = obras.map((o, i) => `
+    <div class="worker-item">
+      <div style="width:12px;height:12px;border-radius:50%;background:${COLORES[i % COLORES.length]};"></div>
+      <div style="flex:1">
+        <div style="font-weight:700">${o.nombre}</div>
+        <div style="font-size:12px;color:#78909C">${o.direccion || 'Sin dirección'}</div>
+      </div>
+      <button class="btn-icon" onclick="editarObra(${o.id})">✏️</button>
+      <button class="btn-icon" onclick="eliminarObra(${o.id})">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function abrirModalObra() {
+  editandoObraId = null;
+  document.getElementById('modal-obra-titulo').textContent = 'Nueva Obra';
+  document.getElementById('o-nombre').value = '';
+  document.getElementById('o-direccion').value = '';
+  abrirModal('modal-obra');
+}
+
+function editarObra(id) {
+  const o = obras.find(o => o.id === id);
+  if (!o) return;
+  editandoObraId = id;
+  document.getElementById('modal-obra-titulo').textContent = 'Editar Obra';
+  document.getElementById('o-nombre').value = o.nombre;
+  document.getElementById('o-direccion').value = o.direccion || '';
+  abrirModal('modal-obra');
+}
+
+function guardarObra() {
+  const nombre = document.getElementById('o-nombre').value.trim();
+  const direccion = document.getElementById('o-direccion').value.trim();
+  
+  if (!nombre) {
+    mostrarToast('⚠️ El nombre es obligatorio');
+    return;
+  }
+  
+  if (editandoObraId) {
+    const o = obras.find(o => o.id === editandoObraId);
+    o.nombre = nombre;
+    o.direccion = direccion;
+    mostrarToast('✅ Obra actualizada');
+  } else {
+    obras.push({
+      id: siguienteIdObra++,
+      nombre,
+      direccion
+    });
+    mostrarToast('✅ Obra añadida');
+  }
+  
+  cerrarModal('modal-obra');
+  renderTodo();
+}
+
+function eliminarObra(id) {
+  if (confirm('¿Eliminar obra? Los trabajadores asignados quedarán sin obra.')) {
+    obras = obras.filter(o => o.id !== id);
+    asignaciones = asignaciones.filter(a => a.obraId !== id);
+    guardarEnStorage();
+    renderTodo();
+    mostrarToast('🗑️ Obra eliminada');
+  }
+}
+
+// Calendario
+function llenarSelectObras(valorSeleccionado) {
+  const select = document.getElementById('obra-filter');
+  select.innerHTML = '<option value="">— Selecciona una obra —</option>' + 
+    obras.map(o => `<option value="${o.id}">${o.nombre}</option>`).join('');
+  if (valorSeleccionado) select.value = valorSeleccionado;
+}
+
+function cambiarMes(delta) {
+  mesCalendario += delta;
+  if (mesCalendario < 0) { mesCalendario = 11; añoCalendario--; }
+  if (mesCalendario > 11) { mesCalendario = 0; añoCalendario++; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  document.getElementById('cal-lbl').textContent = MESES[mesCalendario] + ' ' + añoCalendario;
+  
+  const filtroId = parseInt(document.getElementById('obra-filter').value) || null;
+  const primerDia = new Date(añoCalendario, mesCalendario, 1).getDay();
+  const diasEnMes = new Date(añoCalendario, mesCalendario + 1, 0).getDate();
+  const offset = primerDia === 0 ? 6 : primerDia - 1;
+  
+  let html = '';
+  for (let i = 0; i < offset; i++) html += '<div class="cal-day empty"></div>';
+  
+  for (let d = 1; d <= diasEnMes; d++) {
+    const fecha = `${añoCalendario}-${String(mesCalendario+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const tieneAsignaciones = asignaciones.some(a => a.fecha === fecha && (!filtroId || a.obraId === filtroId));
+    const clases = ['cal-day'];
+    if (fecha === fechaActual) clases.push('today');
+    if (fecha === fechaSeleccionada) clases.push('selected');
+    if (tieneAsignaciones) clases.push('has-w');
+    
+    html += `<div class="${clases.join(' ')}" onclick="seleccionarDia('${fecha}')">${d}</div>`;
+  }
+  
+  document.getElementById('cal-days').innerHTML = html;
+  renderPanelDia(filtroId);
+}
+
+function seleccionarDia(fecha) {
+  fechaSeleccionada = fecha;
+  renderCalendar();
+}
+
+function renderPanelDia(filtroId) {
+  document.getElementById('dw-title').textContent = '📋 ' + formatearFecha(fechaSeleccionada);
+  
+  const asignacionesDia = asignaciones.filter(a => a.fecha === fechaSeleccionada && (!filtroId || a.obraId === filtroId));
+  
+  if (!asignacionesDia.length) {
+    document.getElementById('dw-list').innerHTML = '<div class="empty-state">No hay trabajadores este día</div>';
+    return;
+  }
+  
+  document.getElementById('dw-list').innerHTML = asignacionesDia.map(a => {
+    const t = trabajadores.find(t => t.id === a.trabajadorId);
+    if (!t) return '';
+    return `
+      <div style="display:flex;align-items:center;padding:10px 13px;border-bottom:1px solid #F0F4F8;gap:10px;">
+        <div class="avatar" style="background:${colorObra(a.obraId)};width:36px;height:36px;font-size:12px;">${iniciales(t.nombre, t.apellidos)}</div>
+        <div style="flex:1">
+          <div style="font-weight:700">${t.nombre} ${t.apellidos}</div>
+          <div style="font-size:12px;color:#78909C">${nombreObra(a.obraId)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Resumen con envío por Gmail
+function cambiarMesResumen(delta) {
+  mesResumen += delta;
+  if (mesResumen < 0) { mesResumen = 11; añoResumen--; }
+  if (mesResumen > 11) { mesResumen = 0; añoResumen++; }
+  renderResumen();
+}
+
+function renderResumen() {
+  document.getElementById('res-mes').textContent = MESES[mesResumen] + ' ' + añoResumen;
+  
+  const diasEnMes = new Date(añoResumen, mesResumen + 1, 0).getDate();
+  const fechasMes = [];
+  for (let d = 1; d <= diasEnMes; d++) {
+    fechasMes.push(`${añoResumen}-${String(mesResumen+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  }
+  
+  const asignacionesMes = asignaciones.filter(a => fechasMes.includes(a.fecha));
+  const totalAsignaciones = asignacionesMes.length;
+  const totalDias = new Set(asignacionesMes.map(a => a.fecha)).size;
+  
+  document.getElementById('res-total').textContent = 
+    totalAsignaciones ? `${totalAsignaciones} asignaciones · ${totalDias} días` : 'Sin actividad';
+  
+  let html = '<div class="resumen-lista-trabajadores">';
+  
+  trabajadores.forEach(t => {
+    const asignacionesTrabajador = asignacionesMes.filter(a => a.trabajadorId === t.id);
+    if (!asignacionesTrabajador.length) return;
+    
+    const totalDiasTrabajador = new Set(asignacionesTrabajador.map(a => a.fecha)).size;
+    const activo = trabajadorSeleccionado === t.id;
+    
+    html += `
+      <div class="trabajador-resumen ${activo ? 'activo' : ''}" onclick="seleccionarTrabajador(${t.id})">
+        <div class="avatar" style="background:${colorObra(asignacionesTrabajador[0].obraId)};width:40px;height:40px;font-size:14px;">
+          ${iniciales(t.nombre, t.apellidos)}
+        </div>
+        <div class="trabajador-info">
+          <div class="trabajador-nombre">${t.nombre} ${t.apellidos}</div>
+          <div class="trabajador-total">${totalDiasTrabajador} día${totalDiasTrabajador !== 1 ? 's' : ''}</div>
+        </div>
+        <span style="color:#1565C0;font-size:20px;">${activo ? '▼' : '▶'}</span>
+      </div>
+    `;
+    
+    if (activo) {
+      const obrasTrabajador = {};
+      asignacionesTrabajador.forEach(a => {
+        if (!obrasTrabajador[a.obraId]) obrasTrabajador[a.obraId] = [];
+        obrasTrabajador[a.obraId].push({
+          fecha: a.fecha,
+          dia: parseInt(a.fecha.split('-')[2])
+        });
+      });
+      
+      Object.keys(obrasTrabajador).forEach(obraId => {
+        const obra = obras.find(o => o.id == obraId);
+        const dias = obrasTrabajador[obraId].sort((a,b) => a.dia - b.dia);
+        const totalDiasObra = dias.length;
+        
+        html += `
+          <div class="obra-detalle">
+            <div class="obra-detalle-header">
+              <div style="width:10px;height:10px;border-radius:50%;background:${colorObra(obraId)};"></div>
+              <span class="obra-detalle-nombre">${obra ? obra.nombre : 'Obra'}</span>
+              <span class="obra-detalle-total">${totalDiasObra} día${totalDiasObra !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="dias-grid">
+              ${dias.map(d => {
+                const fechaCompleta = `${añoResumen}-${String(mesResumen+1).padStart(2,'0')}-${String(d.dia).padStart(2,'0')}`;
+                return `<span class="dia-chip ${fechaCompleta === fechaActual ? 'hoy' : ''}">${d.dia}</span>`;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      });
+    }
+  });
+  
+  html += '</div>';
+  
+  if (trabajadores.filter(t => asignacionesMes.some(a => a.trabajadorId === t.id)).length === 0) {
+    html = '<div class="empty-state">No hay actividad este mes</div>';
+  }
+  
+  document.getElementById('resumen-contenido').innerHTML = html;
+}
+
+function seleccionarTrabajador(id) {
+  trabajadorSeleccionado = trabajadorSeleccionado === id ? null : id;
+  renderResumen();
+}
+
+// NUEVA FUNCIÓN PARA ENVIAR POR GMAIL
+function enviarPorGmail() {
+  const año = añoResumen;
+  const mes = mesResumen + 1;
+  const nombreMes = MESES[mesResumen];
+  
+  const diasEnMes = new Date(año, mesResumen + 1, 0).getDate();
+  const fechasMes = [];
+  for (let d = 1; d <= diasEnMes; d++) {
+    fechasMes.push(`${año}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  }
+  
+  const asignacionesMes = asignaciones.filter(a => fechasMes.includes(a.fecha));
+  
+  if (asignacionesMes.length === 0) {
+    mostrarToast('⚠️ No hay datos para enviar este mes');
+    return;
+  }
+  
+  // Crear el contenido del email
+  let contenido = `RESUMEN DE TRABAJO - ${nombreMes} ${año}\n`;
+  contenido += `================================\n\n`;
+  
+  // Resumen general
+  const totalDias = new Set(asignacionesMes.map(a => a.fecha)).size;
+  contenido += `📊 TOTAL: ${asignacionesMes.length} asignaciones en ${totalDias} días\n\n`;
+  
+  // Detalle por trabajador
+  trabajadores.forEach(t => {
+    const asigTrabajador = asignacionesMes.filter(a => a.trabajadorId === t.id);
+    if (asigTrabajador.length === 0) return;
+    
+    const diasTrabajador = new Set(asigTrabajador.map(a => a.fecha)).size;
+    contenido += `👷 ${t.nombre} ${t.apellidos} (${diasTrabajador} días)\n`;
+    
+    // Agrupar por obra
+    const obrasTrabajador = {};
+    asigTrabajador.forEach(a => {
+      if (!obrasTrabajador[a.obraId]) obrasTrabajador[a.obraId] = [];
+      obrasTrabajador[a.obraId].push(parseInt(a.fecha.split('-')[2]));
+    });
+    
+    Object.keys(obrasTrabajador).forEach(obraId => {
+      const obra = obras.find(o => o.id == obraId);
+      const dias = obrasTrabajador[obraId].sort((a,b) => a - b);
+      contenido += `  • ${obra ? obra.nombre : 'Obra'}: ${dias.length} días (días: ${dias.join(', ')})\n`;
+    });
+    contenido += '\n';
+  });
+  
+  // Resumen por obra
+  contenido += `\n📋 RESUMEN POR OBRA\n`;
+  contenido += `==================\n\n`;
+  
+  obras.forEach(o => {
+    const asigObra = asignacionesMes.filter(a => a.obraId === o.id);
+    if (asigObra.length === 0) return;
+    
+    const trabajadoresUnicos = new Set(asigObra.map(a => a.trabajadorId)).size;
+    const diasObra = new Set(asigObra.map(a => a.fecha)).size;
+    
+    contenido += `🏗️ ${o.nombre}\n`;
+    contenido += `   • ${asigObra.length} asignaciones\n`;
+    contenido += `   • ${trabajadoresUnicos} trabajadores diferentes\n`;
+    contenido += `   • ${diasObra} días trabajados\n\n`;
+  });
+  
+  // Crear el enlace mailto
+  const asunto = encodeURIComponent(`Resumen de trabajo - ${nombreMes} ${año}`);
+  const cuerpo = encodeURIComponent(contenido);
+  
+  // Abrir el cliente de email predeterminado
+  window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
+  
+  mostrarToast('📧 Abriendo cliente de email...');
+}
+
+// Modales
+function abrirModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+
+function cerrarModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Cerrar modales al hacer clic fuera
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+
+// Render todo
+function renderTodo() {
+  document.getElementById('today-lbl').textContent = '📅 Hoy: ' + formatearFecha(fechaActual);
+  document.getElementById('app-sub').textContent = trabajadores.length + ' trabajadores · ' + obras.length + ' obras';
+  
+  renderTrabajadores();
+  llenarSelectObras(document.getElementById('obra-filter').value);
+  llenarSelectTrabajadores();
+  renderObras();
+  renderCalendar();
+  if (document.getElementById('tab-resumen').classList.contains('active')) {
+    renderResumen();
+  }
+}
+
+// Inicio
+renderTodo();
+
+// Registrar Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').then(function(registration) {
+      console.log('ServiceWorker registrado');
+    }, function(err) {
+      console.log('ServiceWorker error: ', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
