@@ -333,10 +333,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
     <button class="resumen-nav" onclick="cambiarMesResumen(1)">›</button>
   </div>
   
-  <!-- BOTÓN DE ENVIO POR GMAIL -->
+  <!-- BOTÓN DE ENVIO POR GMAIL + EXPORTAR A MANOBRACAN -->
   <div class="resumen-actions">
     <button class="btn-gmail" onclick="enviarPorGmail()">
-      <span>📧</span> Enviar resumen por Gmail
+      <span>📧</span> Enviar por Gmail
+    </button>
+    <button class="btn-gmail" style="background:#1565C0;box-shadow:0 2px 8px rgba(21,101,192,.35);" onclick="exportarParaManobracan()">
+      <span>💾</span> Exportar a Manobracan
     </button>
   </div>
   
@@ -345,6 +348,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
 
 <!-- PESTAÑA GESTIÓN -->
 <div id="tab-gestion" class="content">
+
+  <!-- COPIA DE SEGURIDAD -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-header" style="background:linear-gradient(135deg,#4A148C,#6A1B9A);">
+      <span>💾 Copia de seguridad</span>
+    </div>
+    <div style="padding:14px;display:flex;flex-direction:column;gap:10px;">
+      <p style="font-size:13px;color:#546E7A;line-height:1.5;">
+        Guarda una copia de todos tus datos (trabajadores, obras y asignaciones) en un fichero <strong>.json</strong>.
+        Úsala para <strong>no perder nada</strong> si actualizas la app o cambias de dispositivo.
+      </p>
+      <button class="btn btn-primary" style="font-size:14px;padding:13px;" onclick="exportarBackup()">
+        📤 Guardar copia de seguridad
+      </button>
+      <button class="btn" style="background:linear-gradient(135deg,#4A148C,#6A1B9A);color:#fff;font-size:14px;padding:13px;" onclick="document.getElementById('input-restaurar').click()">
+        📥 Restaurar copia de seguridad
+      </button>
+      <p style="font-size:11px;color:#B0BEC5;text-align:center;" id="backup-fecha-lbl"></p>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-header">
       <span>Obras</span>
@@ -353,6 +377,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
     <div id="obras-list"></div>
   </div>
 </div>
+
+<!-- Input oculto para restaurar backup -->
+<input type="file" id="input-restaurar" accept=".json" style="display:none;" onchange="restaurarBackup(this)">
 
 <button class="fab" id="fab" onclick="abrirModalTrabajador()">＋</button>
 
@@ -436,6 +463,7 @@ function isRunningStandalone() {
 window.addEventListener('load', function() {
   setTimeout(function() {
     document.getElementById('splash').classList.add('hide');
+    actualizarEtiquetaBackup();
   }, 1000);
   
   if (!isRunningStandalone() && !localStorage.getItem('guia_instalacion_cerrada')) {
@@ -443,16 +471,24 @@ window.addEventListener('load', function() {
   }
 });
 
-// Utilidades
+// Utilidades de almacenamiento
+const STORAGE_KEY = 'app_obras';
+const BACKUP_META_KEY = 'app_obras_backup_meta';
+
 function guardarEnStorage() {
-  localStorage.setItem('app_obras', JSON.stringify({
-    obras, trabajadores, asignaciones, siguienteIdTrabajador, siguienteIdObra
-  }));
+  const payload = {
+    obras, trabajadores, asignaciones,
+    siguienteIdTrabajador, siguienteIdObra,
+    ultimaModificacion: new Date().toISOString()
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  // Actualizar etiqueta de fecha en gestión
+  actualizarEtiquetaBackup();
 }
 
 function cargarStorage() {
   try {
-    const datos = localStorage.getItem('app_obras');
+    const datos = localStorage.getItem(STORAGE_KEY);
     if (datos) {
       const parsed = JSON.parse(datos);
       obras = parsed.obras || obras;
@@ -462,6 +498,100 @@ function cargarStorage() {
       siguienteIdObra = parsed.siguienteIdObra || 10;
     }
   } catch(e) {}
+}
+
+function actualizarEtiquetaBackup() {
+  const lbl = document.getElementById('backup-fecha-lbl');
+  if (!lbl) return;
+  try {
+    const datos = localStorage.getItem(STORAGE_KEY);
+    if (datos) {
+      const parsed = JSON.parse(datos);
+      if (parsed.ultimaModificacion) {
+        const d = new Date(parsed.ultimaModificacion);
+        lbl.textContent = `Último guardado en este dispositivo: ${d.toLocaleDateString('es-ES')} ${d.toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'})}`;
+      }
+    }
+  } catch(e) {}
+}
+
+// ── EXPORTAR BACKUP COMPLETO ─────────────────────────────────────────────
+function exportarBackup() {
+  const payload = {
+    _tipo: 'backup_control_trabajadores',
+    _version: '1.0',
+    _fecha: new Date().toISOString(),
+    obras, trabajadores, asignaciones,
+    siguienteIdTrabajador, siguienteIdObra
+  };
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fecha = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `backup_trabajadores_${fecha}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  mostrarToast(`✅ Copia guardada (${trabajadores.length} trabajadores, ${asignaciones.length} asignaciones)`);
+}
+
+// ── RESTAURAR BACKUP ─────────────────────────────────────────────────────
+function restaurarBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  // Resetear el input para que el evento vuelva a dispararse si eligen el mismo fichero
+  input.value = '';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+
+      // Aceptar tanto backups propios como exportaciones para Manobracan (que también tienen trabajadores)
+      const esBackup   = parsed._tipo === 'backup_control_trabajadores';
+      const tieneDatos = parsed.obras || parsed.trabajadores || parsed.asignaciones;
+
+      if (!tieneDatos) {
+        mostrarToast('❌ El fichero no contiene datos válidos');
+        return;
+      }
+
+      const numTrab = (parsed.trabajadores || []).length;
+      const numAsig = (parsed.asignaciones || []).length;
+      const numObras = (parsed.obras || []).length;
+      const fechaBackup = parsed._fecha
+        ? new Date(parsed._fecha).toLocaleDateString('es-ES')
+        : (esBackup ? 'desconocida' : 'exportación Manobracan');
+
+      // Confirmar antes de sobreescribir
+      if (!confirm(
+        `¿Restaurar esta copia?\n\n` +
+        `📅 Fecha: ${fechaBackup}\n` +
+        `👷 Trabajadores: ${numTrab}\n` +
+        `🏗️ Obras: ${numObras}\n` +
+        `📋 Asignaciones: ${numAsig}\n\n` +
+        `⚠️ Se reemplazarán todos los datos actuales.`
+      )) return;
+
+      // Restaurar
+      obras        = parsed.obras        || [];
+      trabajadores = parsed.trabajadores || [];
+      asignaciones = parsed.asignaciones || [];
+      siguienteIdTrabajador = parsed.siguienteIdTrabajador || (Math.max(0, ...trabajadores.map(t => t.id)) + 1);
+      siguienteIdObra       = parsed.siguienteIdObra       || (Math.max(0, ...obras.map(o => o.id)) + 1);
+
+      guardarEnStorage();
+      renderTodo();
+      mostrarToast(`✅ Restaurado: ${numTrab} trabajadores, ${numAsig} asignaciones`);
+
+    } catch(err) {
+      mostrarToast('❌ Error al leer el fichero: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
 }
 
 cargarStorage();
@@ -895,6 +1025,67 @@ function renderResumen() {
 function seleccionarTrabajador(id) {
   trabajadorSeleccionado = trabajadorSeleccionado === id ? null : id;
   renderResumen();
+}
+
+// ── EXPORTAR PARA MANOBRACAN ────────────────────────────────────────────
+function exportarParaManobracan() {
+  const año = añoResumen;
+  const mes = mesResumen + 1;
+  const nombreMes = MESES[mesResumen].toUpperCase();
+
+  const diasEnMes = new Date(año, mesResumen + 1, 0).getDate();
+  const fechasMes = [];
+  for (let d = 1; d <= diasEnMes; d++) {
+    fechasMes.push(`${año}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  }
+
+  const asignacionesMes = asignaciones.filter(a => fechasMes.includes(a.fecha));
+
+  if (asignacionesMes.length === 0) {
+    mostrarToast('⚠️ No hay datos para exportar este mes');
+    return;
+  }
+
+  // Construir resumen de días por trabajador
+  const resumenTrabajadores = trabajadores.map(t => {
+    const asigT = asignacionesMes.filter(a => a.trabajadorId === t.id);
+    const diasPorObra = {};
+    asigT.forEach(a => {
+      const obraObj = obras.find(o => o.id === a.obraId);
+      const nombreObra = obraObj ? obraObj.nombre : 'Sin obra';
+      if (!diasPorObra[nombreObra]) diasPorObra[nombreObra] = [];
+      diasPorObra[nombreObra].push(parseInt(a.fecha.split('-')[2]));
+    });
+    return {
+      id: t.id,
+      nombre: t.nombre,
+      apellidos: t.apellidos,
+      nombre_completo: `${t.nombre} ${t.apellidos}`,
+      total_dias: asigT.length,
+      dias_por_obra: diasPorObra
+    };
+  }).filter(t => t.total_dias > 0);
+
+  const exportData = {
+    version: "1.0",
+    generado: new Date().toISOString(),
+    mes: nombreMes,
+    año: año,
+    trabajadores: resumenTrabajadores
+  };
+
+  // Descargar como fichero JSON
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `manobracan_${nombreMes}_${año}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  mostrarToast(`✅ Exportado: ${resumenTrabajadores.length} trabajadores`);
 }
 
 // NUEVA FUNCIÓN PARA ENVIAR POR GMAIL
