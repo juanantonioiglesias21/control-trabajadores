@@ -76,6 +76,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
 .worker-item:last-child{border-bottom:none;}
 .avatar{width:42px;height:42px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;font-size:15px;}
 .obra-badge{background:#E3F2FD;color:#1565C0;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+.horas-badge{background:#FFF3E0;color:#FF6F00;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-left:6px;}
 .btn-icon{background:none;border:none;cursor:pointer;padding:6px;font-size:16px;border-radius:50%;}
 .fab{position:fixed;bottom:78px;right:max(16px,calc(50vw - 215px + 16px));width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#FF6F00,#FF8F00);color:#fff;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 14px rgba(255,111,0,.5);z-index:50;display:flex;align-items:center;justify-content:center;}
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;display:flex;border-top:1px solid #E0E0E0;box-shadow:0 -2px 10px rgba(0,0,0,.08);z-index:100;padding-bottom:env(safe-area-inset-bottom, 0);}
@@ -297,8 +298,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
     </select>
   </div>
   
-  <div style="display:flex; gap:8px; margin-bottom:14px;">
+  <div style="display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
     <input type="date" id="asignacion-fecha" style="flex:2; padding:11px 12px; border:1.5px solid #E0E0E0; border-radius:9px; font-size:15px;">
+    <input type="number" id="asignacion-horas" placeholder="Horas" step="0.5" min="0" max="24" style="flex:1; padding:11px 12px; border:1.5px solid #E0E0E0; border-radius:9px; font-size:15px;">
     <button class="btn btn-primary" style="flex:1; padding:11px;" onclick="asignarTrabajadorAObra()">Asignar</button>
   </div>
   
@@ -390,6 +392,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
   <div class="nav-item" onclick="showTab('gestion')"><div class="nav-icon">⚙️</div><div class="nav-label">Gestión</div></div>
 </div>
 
+<!-- Modal Editar Asignación -->
+<div class="modal-overlay" id="modal-editar-asignacion">
+  <div class="modal">
+    <h2>Editar Asignación</h2>
+    <div class="fg"><label>Fecha</label><input type="date" id="edit-fecha" readonly style="background:#f5f5f5;"></div>
+    <div class="fg"><label>Trabajador</label><select id="edit-trabajador"></select></div>
+    <div class="fg"><label>Obra</label><select id="edit-obra"></select></div>
+    <div class="fg"><label>Horas</label><input type="number" id="edit-horas" step="0.5" min="0" max="24"></div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="cerrarModal('modal-editar-asignacion')">Cancelar</button>
+      <button class="btn btn-danger" onclick="eliminarAsignacion()">Eliminar</button>
+      <button class="btn btn-primary" onclick="guardarEdicionAsignacion()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Trabajador -->
 <div class="modal-overlay" id="modal-trabajador">
   <div class="modal">
@@ -435,9 +453,9 @@ let trabajadores = [
   {id:3, nombre:'José', apellidos:'Fernández'}
 ];
 let asignaciones = [
-  {trabajadorId:1, obraId:1, fecha:new Date().toISOString().split('T')[0]},
-  {trabajadorId:2, obraId:2, fecha:new Date().toISOString().split('T')[0]},
-  {trabajadorId:3, obraId:3, fecha:new Date().toISOString().split('T')[0]}
+  {trabajadorId:1, obraId:1, fecha:new Date().toISOString().split('T')[0], horas:8},
+  {trabajadorId:2, obraId:2, fecha:new Date().toISOString().split('T')[0], horas:6},
+  {trabajadorId:3, obraId:3, fecha:new Date().toISOString().split('T')[0], horas:7.5}
 ];
 
 let siguienteIdTrabajador = 10;
@@ -451,6 +469,7 @@ let mesResumen = new Date().getMonth();
 let trabajadorSeleccionado = null;
 let editandoTrabajadorId = null;
 let editandoObraId = null;
+let editandoAsignacion = null;
 
 // Detectar si está instalada como app
 function isRunningStandalone() {
@@ -482,7 +501,6 @@ function guardarEnStorage() {
     ultimaModificacion: new Date().toISOString()
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  // Actualizar etiqueta de fecha en gestión
   actualizarEtiquetaBackup();
 }
 
@@ -542,16 +560,12 @@ function exportarBackup() {
 function restaurarBackup(input) {
   const file = input.files[0];
   if (!file) return;
-  // Resetear el input para que el evento vuelva a dispararse si eligen el mismo fichero
   input.value = '';
 
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
       const parsed = JSON.parse(e.target.result);
-
-      // Aceptar tanto backups propios como exportaciones para Manobracan (que también tienen trabajadores)
-      const esBackup   = parsed._tipo === 'backup_control_trabajadores';
       const tieneDatos = parsed.obras || parsed.trabajadores || parsed.asignaciones;
 
       if (!tieneDatos) {
@@ -564,9 +578,8 @@ function restaurarBackup(input) {
       const numObras = (parsed.obras || []).length;
       const fechaBackup = parsed._fecha
         ? new Date(parsed._fecha).toLocaleDateString('es-ES')
-        : (esBackup ? 'desconocida' : 'exportación Manobracan');
+        : 'desconocida';
 
-      // Confirmar antes de sobreescribir
       if (!confirm(
         `¿Restaurar esta copia?\n\n` +
         `📅 Fecha: ${fechaBackup}\n` +
@@ -576,7 +589,6 @@ function restaurarBackup(input) {
         `⚠️ Se reemplazarán todos los datos actuales.`
       )) return;
 
-      // Restaurar
       obras        = parsed.obras        || [];
       trabajadores = parsed.trabajadores || [];
       asignaciones = parsed.asignaciones || [];
@@ -625,20 +637,20 @@ function colorObra(id) {
 }
 
 function getAsignacion(trabajadorId, fecha) {
-  const a = asignaciones.find(a => a.trabajadorId === trabajadorId && a.fecha === fecha);
-  return a ? a.obraId : null;
+  return asignaciones.find(a => a.trabajadorId === trabajadorId && a.fecha === fecha);
 }
 
-function setAsignacion(trabajadorId, obraId, fecha) {
+function setAsignacion(trabajadorId, obraId, fecha, horas) {
   const existente = asignaciones.find(a => a.trabajadorId === trabajadorId && a.fecha === fecha);
   if (existente) {
     if (obraId) {
       existente.obraId = obraId;
+      existente.horas = horas;
     } else {
       asignaciones = asignaciones.filter(a => !(a.trabajadorId === trabajadorId && a.fecha === fecha));
     }
   } else if (obraId) {
-    asignaciones.push({trabajadorId, obraId, fecha});
+    asignaciones.push({trabajadorId, obraId, fecha, horas: horas || 0});
   }
   guardarEnStorage();
 }
@@ -664,6 +676,7 @@ function showTab(tab) {
   if (tab === 'obras') {
     llenarSelectTrabajadores();
     document.getElementById('asignacion-fecha').value = fechaActual;
+    document.getElementById('asignacion-horas').value = 8;
   }
   if (tab === 'resumen') renderResumen();
 }
@@ -681,13 +694,15 @@ function renderTrabajadores() {
   }
   
   lista.innerHTML = trabajadores.map(t => {
-    const obraId = getAsignacion(t.id, fechaActual);
+    const asignacion = getAsignacion(t.id, fechaActual);
+    const obraId = asignacion ? asignacion.obraId : null;
+    const horas = asignacion ? asignacion.horas : 0;
     return `
       <div class="worker-item">
         <div class="avatar" style="background:${colorObra(obraId)}">${iniciales(t.nombre, t.apellidos)}</div>
         <div style="flex:1">
           <div style="font-weight:700">${t.nombre} ${t.apellidos}</div>
-          <span class="obra-badge">${nombreObra(obraId)}</span>
+          <div><span class="obra-badge">${nombreObra(obraId)}</span>${horas > 0 ? `<span class="horas-badge">🕒 ${horas}h</span>` : ''}</div>
         </div>
         <button class="btn-icon" onclick="editarTrabajador(${t.id})">✏️</button>
         <button class="btn-icon" onclick="eliminarTrabajador(${t.id})">🗑️</button>
@@ -762,6 +777,7 @@ function asignarTrabajadorAObra() {
   const obraId = parseInt(document.getElementById('obra-filter').value);
   const trabajadorId = parseInt(document.getElementById('trabajador-select').value);
   const fecha = document.getElementById('asignacion-fecha').value;
+  const horas = parseFloat(document.getElementById('asignacion-horas').value) || 0;
   
   if (!obraId) {
     mostrarToast('⚠️ Selecciona una obra');
@@ -778,11 +794,17 @@ function asignarTrabajadorAObra() {
     return;
   }
   
-  setAsignacion(trabajadorId, obraId, fecha);
+  if (horas <= 0) {
+    mostrarToast('⚠️ Las horas deben ser mayores a 0');
+    return;
+  }
+  
+  setAsignacion(trabajadorId, obraId, fecha, horas);
   renderCalendar();
-  mostrarToast('✅ Trabajador asignado a la obra');
+  mostrarToast(`✅ ${trabajadores.find(t => t.id === trabajadorId).nombre} asignado a ${nombreObra(obraId)} con ${horas}h`);
   
   document.getElementById('trabajador-select').value = '';
+  document.getElementById('asignacion-horas').value = 8;
 }
 
 // Obras
@@ -922,15 +944,86 @@ function renderPanelDia(filtroId) {
     const t = trabajadores.find(t => t.id === a.trabajadorId);
     if (!t) return '';
     return `
-      <div style="display:flex;align-items:center;padding:10px 13px;border-bottom:1px solid #F0F4F8;gap:10px;">
+      <div style="display:flex;align-items:center;padding:10px 13px;border-bottom:1px solid #F0F4F8;gap:10px;cursor:pointer;" onclick="abrirEditarAsignacion('${a.fecha}', ${a.trabajadorId})">
         <div class="avatar" style="background:${colorObra(a.obraId)};width:36px;height:36px;font-size:12px;">${iniciales(t.nombre, t.apellidos)}</div>
         <div style="flex:1">
           <div style="font-weight:700">${t.nombre} ${t.apellidos}</div>
-          <div style="font-size:12px;color:#78909C">${nombreObra(a.obraId)}</div>
+          <div><span style="font-size:12px;color:#78909C">${nombreObra(a.obraId)}</span><span class="horas-badge" style="margin-left:6px;">🕒 ${a.horas}h</span></div>
         </div>
+        <span style="color:#78909C;font-size:12px;">✏️</span>
       </div>
     `;
   }).join('');
+}
+
+// Editar asignación
+function abrirEditarAsignacion(fecha, trabajadorId) {
+  const asignacion = asignaciones.find(a => a.fecha === fecha && a.trabajadorId === trabajadorId);
+  if (!asignacion) return;
+  
+  editandoAsignacion = { fecha, trabajadorId };
+  
+  document.getElementById('edit-fecha').value = fecha;
+  document.getElementById('edit-horas').value = asignacion.horas;
+  
+  // Llenar select de trabajadores
+  const selectTrabajador = document.getElementById('edit-trabajador');
+  selectTrabajador.innerHTML = trabajadores.map(t => 
+    `<option value="${t.id}" ${t.id === trabajadorId ? 'selected' : ''}>${t.nombre} ${t.apellidos}</option>`
+  ).join('');
+  
+  // Llenar select de obras
+  const selectObra = document.getElementById('edit-obra');
+  selectObra.innerHTML = obras.map(o => 
+    `<option value="${o.id}" ${o.id === asignacion.obraId ? 'selected' : ''}>${o.nombre}</option>`
+  ).join('');
+  
+  abrirModal('modal-editar-asignacion');
+}
+
+function guardarEdicionAsignacion() {
+  if (!editandoAsignacion) return;
+  
+  const nuevaFecha = document.getElementById('edit-fecha').value;
+  const nuevoTrabajadorId = parseInt(document.getElementById('edit-trabajador').value);
+  const nuevaObraId = parseInt(document.getElementById('edit-obra').value);
+  const nuevasHoras = parseFloat(document.getElementById('edit-horas').value);
+  
+  if (!nuevaFecha || !nuevoTrabajadorId || !nuevaObraId || nuevasHoras <= 0) {
+    mostrarToast('⚠️ Todos los campos son obligatorios y horas deben ser > 0');
+    return;
+  }
+  
+  // Eliminar la asignación original
+  asignaciones = asignaciones.filter(a => !(a.fecha === editandoAsignacion.fecha && a.trabajadorId === editandoAsignacion.trabajadorId));
+  
+  // Crear la nueva asignación
+  asignaciones.push({
+    trabajadorId: nuevoTrabajadorId,
+    obraId: nuevaObraId,
+    fecha: nuevaFecha,
+    horas: nuevasHoras
+  });
+  
+  guardarEnStorage();
+  cerrarModal('modal-editar-asignacion');
+  renderTodo();
+  mostrarToast('✅ Asignación actualizada');
+  
+  editandoAsignacion = null;
+}
+
+function eliminarAsignacion() {
+  if (!editandoAsignacion) return;
+  
+  if (confirm('¿Eliminar esta asignación?')) {
+    asignaciones = asignaciones.filter(a => !(a.fecha === editandoAsignacion.fecha && a.trabajadorId === editandoAsignacion.trabajadorId));
+    guardarEnStorage();
+    cerrarModal('modal-editar-asignacion');
+    renderTodo();
+    mostrarToast('🗑️ Asignación eliminada');
+    editandoAsignacion = null;
+  }
 }
 
 // Resumen con envío por Gmail
@@ -951,11 +1044,12 @@ function renderResumen() {
   }
   
   const asignacionesMes = asignaciones.filter(a => fechasMes.includes(a.fecha));
+  const totalHoras = asignacionesMes.reduce((sum, a) => sum + a.horas, 0);
   const totalAsignaciones = asignacionesMes.length;
   const totalDias = new Set(asignacionesMes.map(a => a.fecha)).size;
   
   document.getElementById('res-total').textContent = 
-    totalAsignaciones ? `${totalAsignaciones} asignaciones · ${totalDias} días` : 'Sin actividad';
+    totalAsignaciones ? `${totalHoras} horas · ${totalDias} días` : 'Sin actividad';
   
   let html = '<div class="resumen-lista-trabajadores">';
   
@@ -963,6 +1057,7 @@ function renderResumen() {
     const asignacionesTrabajador = asignacionesMes.filter(a => a.trabajadorId === t.id);
     if (!asignacionesTrabajador.length) return;
     
+    const totalHorasTrabajador = asignacionesTrabajador.reduce((sum, a) => sum + a.horas, 0);
     const totalDiasTrabajador = new Set(asignacionesTrabajador.map(a => a.fecha)).size;
     const activo = trabajadorSeleccionado === t.id;
     
@@ -973,7 +1068,7 @@ function renderResumen() {
         </div>
         <div class="trabajador-info">
           <div class="trabajador-nombre">${t.nombre} ${t.apellidos}</div>
-          <div class="trabajador-total">${totalDiasTrabajador} día${totalDiasTrabajador !== 1 ? 's' : ''}</div>
+          <div class="trabajador-total">${totalHorasTrabajador}h · ${totalDiasTrabajador} día${totalDiasTrabajador !== 1 ? 's' : ''}</div>
         </div>
         <span style="color:#1565C0;font-size:20px;">${activo ? '▼' : '▶'}</span>
       </div>
@@ -985,26 +1080,27 @@ function renderResumen() {
         if (!obrasTrabajador[a.obraId]) obrasTrabajador[a.obraId] = [];
         obrasTrabajador[a.obraId].push({
           fecha: a.fecha,
-          dia: parseInt(a.fecha.split('-')[2])
+          dia: parseInt(a.fecha.split('-')[2]),
+          horas: a.horas
         });
       });
       
       Object.keys(obrasTrabajador).forEach(obraId => {
         const obra = obras.find(o => o.id == obraId);
         const dias = obrasTrabajador[obraId].sort((a,b) => a.dia - b.dia);
-        const totalDiasObra = dias.length;
+        const totalHorasObra = dias.reduce((sum, d) => sum + d.horas, 0);
         
         html += `
           <div class="obra-detalle">
             <div class="obra-detalle-header">
               <div style="width:10px;height:10px;border-radius:50%;background:${colorObra(obraId)};"></div>
               <span class="obra-detalle-nombre">${obra ? obra.nombre : 'Obra'}</span>
-              <span class="obra-detalle-total">${totalDiasObra} día${totalDiasObra !== 1 ? 's' : ''}</span>
+              <span class="obra-detalle-total">${totalHorasObra}h · ${dias.length} día${dias.length !== 1 ? 's' : ''}</span>
             </div>
             <div class="dias-grid">
               ${dias.map(d => {
                 const fechaCompleta = `${añoResumen}-${String(mesResumen+1).padStart(2,'0')}-${String(d.dia).padStart(2,'0')}`;
-                return `<span class="dia-chip ${fechaCompleta === fechaActual ? 'hoy' : ''}">${d.dia}</span>`;
+                return `<span class="dia-chip ${fechaCompleta === fechaActual ? 'hoy' : ''}">${d.dia} (${d.horas}h)</span>`;
               }).join('')}
             </div>
           </div>
@@ -1046,7 +1142,6 @@ function exportarParaManobracan() {
     return;
   }
 
-  // Construir resumen de días por trabajador
   const resumenTrabajadores = trabajadores.map(t => {
     const asigT = asignacionesMes.filter(a => a.trabajadorId === t.id);
     const diasPorObra = {};
@@ -1054,13 +1149,17 @@ function exportarParaManobracan() {
       const obraObj = obras.find(o => o.id === a.obraId);
       const nombreObra = obraObj ? obraObj.nombre : 'Sin obra';
       if (!diasPorObra[nombreObra]) diasPorObra[nombreObra] = [];
-      diasPorObra[nombreObra].push(parseInt(a.fecha.split('-')[2]));
+      diasPorObra[nombreObra].push({
+        dia: parseInt(a.fecha.split('-')[2]),
+        horas: a.horas
+      });
     });
     return {
       id: t.id,
       nombre: t.nombre,
       apellidos: t.apellidos,
       nombre_completo: `${t.nombre} ${t.apellidos}`,
+      total_horas: asigT.reduce((sum, a) => sum + a.horas, 0),
       total_dias: asigT.length,
       dias_por_obra: diasPorObra
     };
@@ -1074,7 +1173,6 @@ function exportarParaManobracan() {
     trabajadores: resumenTrabajadores
   };
 
-  // Descargar como fichero JSON
   const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1107,59 +1205,42 @@ function enviarPorGmail() {
     return;
   }
   
-  // Crear el contenido del email
   let contenido = `RESUMEN DE TRABAJO - ${nombreMes} ${año}\n`;
   contenido += `================================\n\n`;
   
-  // Resumen general
+  const totalHoras = asignacionesMes.reduce((sum, a) => sum + a.horas, 0);
   const totalDias = new Set(asignacionesMes.map(a => a.fecha)).size;
-  contenido += `📊 TOTAL: ${asignacionesMes.length} asignaciones en ${totalDias} días\n\n`;
+  contenido += `📊 TOTAL: ${totalHoras} horas en ${totalDias} días\n\n`;
   
-  // Detalle por trabajador
   trabajadores.forEach(t => {
     const asigTrabajador = asignacionesMes.filter(a => a.trabajadorId === t.id);
     if (asigTrabajador.length === 0) return;
     
+    const totalHorasTrab = asigTrabajador.reduce((sum, a) => sum + a.horas, 0);
     const diasTrabajador = new Set(asigTrabajador.map(a => a.fecha)).size;
-    contenido += `👷 ${t.nombre} ${t.apellidos} (${diasTrabajador} días)\n`;
+    contenido += `👷 ${t.nombre} ${t.apellidos} (${totalHorasTrab}h · ${diasTrabajador} días)\n`;
     
-    // Agrupar por obra
     const obrasTrabajador = {};
     asigTrabajador.forEach(a => {
       if (!obrasTrabajador[a.obraId]) obrasTrabajador[a.obraId] = [];
-      obrasTrabajador[a.obraId].push(parseInt(a.fecha.split('-')[2]));
+      obrasTrabajador[a.obraId].push({
+        dia: parseInt(a.fecha.split('-')[2]),
+        horas: a.horas
+      });
     });
     
     Object.keys(obrasTrabajador).forEach(obraId => {
       const obra = obras.find(o => o.id == obraId);
-      const dias = obrasTrabajador[obraId].sort((a,b) => a - b);
-      contenido += `  • ${obra ? obra.nombre : 'Obra'}: ${dias.length} días (días: ${dias.join(', ')})\n`;
+      const registros = obrasTrabajador[obraId].sort((a,b) => a.dia - b.dia);
+      const totalHorasObra = registros.reduce((sum, r) => sum + r.horas, 0);
+      contenido += `  • ${obra ? obra.nombre : 'Obra'}: ${totalHorasObra}h (días: ${registros.map(r => `${r.dia}(${r.horas}h)`).join(', ')})\n`;
     });
     contenido += '\n';
   });
   
-  // Resumen por obra
-  contenido += `\n📋 RESUMEN POR OBRA\n`;
-  contenido += `==================\n\n`;
-  
-  obras.forEach(o => {
-    const asigObra = asignacionesMes.filter(a => a.obraId === o.id);
-    if (asigObra.length === 0) return;
-    
-    const trabajadoresUnicos = new Set(asigObra.map(a => a.trabajadorId)).size;
-    const diasObra = new Set(asigObra.map(a => a.fecha)).size;
-    
-    contenido += `🏗️ ${o.nombre}\n`;
-    contenido += `   • ${asigObra.length} asignaciones\n`;
-    contenido += `   • ${trabajadoresUnicos} trabajadores diferentes\n`;
-    contenido += `   • ${diasObra} días trabajados\n\n`;
-  });
-  
-  // Crear el enlace mailto
   const asunto = encodeURIComponent(`Resumen de trabajo - ${nombreMes} ${año}`);
   const cuerpo = encodeURIComponent(contenido);
   
-  // Abrir el cliente de email predeterminado
   window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
   
   mostrarToast('📧 Abriendo cliente de email...');
