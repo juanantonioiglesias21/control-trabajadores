@@ -75,8 +75,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
 .worker-item{display:flex;align-items:center;padding:11px 13px;border-bottom:1px solid #F0F4F8;gap:11px;}
 .worker-item:last-child{border-bottom:none;}
 .avatar{width:42px;height:42px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;font-size:15px;}
-.obra-badge{background:#E3F2FD;color:#1565C0;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+.obra-badge{background:#E3F2FD;color:#1565C0;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;display:inline-block;margin:2px 4px 2px 0;}
 .horas-badge{background:#FFF3E0;color:#FF6F00;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-left:6px;}
+.festivo-badge{background:#F3E5F5;color:#6A1B9A;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-left:6px;}
 .btn-icon{background:none;border:none;cursor:pointer;padding:6px;font-size:16px;border-radius:50%;}
 .fab{position:fixed;bottom:78px;right:max(16px,calc(50vw - 215px + 16px));width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#FF6F00,#FF8F00);color:#fff;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 14px rgba(255,111,0,.5);z-index:50;display:flex;align-items:center;justify-content:center;}
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;display:flex;border-top:1px solid #E0E0E0;box-shadow:0 -2px 10px rgba(0,0,0,.08);z-index:100;padding-bottom:env(safe-area-inset-bottom, 0);}
@@ -95,11 +96,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
 .fg label{display:block;font-size:11px;color:#78909C;margin-bottom:5px;text-transform:uppercase;font-weight:700;letter-spacing:.4px;}
 .fg input,.fg select{width:100%;padding:11px 12px;border:1.5px solid #E0E0E0;border-radius:9px;font-size:15px;outline:none;background:#FAFAFA;}
 .fg input:focus,.fg select:focus{border-color:#1565C0;background:#fff;}
+.checkbox-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.checkbox-row label{font-size:14px;font-weight:500;color:#37474F;margin:0;}
+.checkbox-row input{width:22px;height:22px;margin:0;cursor:pointer;}
 .modal-btns{display:flex;gap:10px;margin-top:18px;}
 .btn{flex:1;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;border:none;}
 .btn-cancel{background:#EEE;color:#424242;}
 .btn-primary{background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;}
 .btn-danger{background:linear-gradient(135deg,#C62828,#D32F2F);color:#fff;}
+.btn-festivo{background:#6A1B9A;color:#fff;}
 
 /* Calendario */
 .cal-wrap{background:#fff;border-radius:12px;box-shadow:0 1px 5px rgba(0,0,0,.1);overflow:hidden;}
@@ -115,6 +120,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
 .cal-day.today{color:#1565C0;font-weight:800;}
 .cal-day.selected{background:#1565C0!important;color:#fff!important;}
 .cal-day.has-w::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#FF6F00;}
+.cal-day.has-fest::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#6A1B9A;}
 .day-panel{background:#fff;border-radius:12px;box-shadow:0 1px 5px rgba(0,0,0,.1);margin-top:12px;overflow:hidden;}
 .day-panel-hdr{background:#37474F;color:#fff;padding:11px 14px;font-size:13px;font-weight:700;}
 .empty-state{padding:24px;text-align:center;color:#B0BEC5;font-size:14px;}
@@ -124,17 +130,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
 .obra-sel-wrap select, .trabajador-sel-wrap select{width:100%;padding:13px 36px 13px 14px;border:2px solid #1565C0;border-radius:11px;font-size:15px;background:#fff;appearance:none;cursor:pointer;font-weight:700;color:#1A237E;}
 .obra-sel-wrap::after, .trabajador-sel-wrap::after{content:'▾';position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#1565C0;pointer-events:none;font-size:15px;}
 
-/* Resumen con botón Gmail */
+/* Resumen */
 .resumen-header{background:linear-gradient(135deg,#1B5E20,#2E7D32);color:#fff;padding:13px 14px;display:flex;justify-content:space-between;align-items:center;border-radius:12px;margin-bottom:12px;}
 .resumen-nav{background:none;border:none;color:#fff;font-size:24px;cursor:pointer;padding:2px 10px;border-radius:50%;}
 .resumen-actions{display:flex;gap:8px;margin-bottom:12px;}
 .btn-gmail{background:#EA4335;color:white;border:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;flex:1;box-shadow:0 2px 8px rgba(234,67,53,.3);}
-.btn-gmail:hover{background:#D33828;}
-.btn-gmail:active{transform:scale(0.98);}
 .resumen-lista-trabajadores{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,.1);}
 .trabajador-resumen{display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid #F0F4F8;cursor:pointer;}
 .trabajador-resumen:last-child{border-bottom:none;}
-.trabajador-resumen:hover{background:#F5F9FF;}
 .trabajador-resumen.activo{background:#E3F2FD;border-left:4px solid #1565C0;}
 .trabajador-info{flex:1;margin-left:10px;}
 .trabajador-nombre{font-size:14px;font-weight:700;}
@@ -145,91 +148,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
 .obra-detalle-total{color:#1565C0;font-weight:800;font-size:13px;}
 .dias-grid{display:flex;flex-wrap:wrap;gap:6px;}
 .dia-chip{background:#E3F2FD;color:#1565C0;padding:5px 10px;border-radius:15px;font-size:12px;font-weight:600;}
-.dia-chip.fin-semana{background:#FFE0E0;color:#C62828;}
+.dia-chip.festivo{background:#F3E5F5;color:#6A1B9A;}
 .dia-chip.hoy{background:#1565C0;color:#fff;}
 
-/* Toast y loading */
+/* Toast */
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:400;opacity:0;transition:opacity .3s;pointer-events:none;}
 .toast.show{opacity:1;}
-.loading{text-align:center;padding:20px;color:#1565C0;}
 
-/* GUÍA DE INSTALACIÓN */
-.install-guide {
-  background: #FFF3E0;
-  border-radius: 12px;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-left: 4px solid #FF6F00;
-  display: none;
-}
-.install-guiderow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.install-guiderow:last-child {
-  margin-bottom: 0;
-}
-.install-guide-icon {
-  font-size: 32px;
-  min-width: 48px;
-  text-align: center;
-}
-.install-guide-text {
-  flex: 1;
-  color: #E65100;
-  font-weight: 600;
-  font-size: 14px;
-}
-.install-guide-steps {
-  background: white;
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 13px;
-}
-.step {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid #FFE0B2;
-}
-.step:last-child {
-  border-bottom: none;
-}
-.step-number {
-  background: #FF6F00;
-  color: white;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 800;
-}
-.step-text {
-  flex: 1;
-}
-.install-guide-close {
-  background: #FF6F00;
-  border: none;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 12px;
-  cursor: pointer;
-  width: 100%;
-  margin-top: 10px;
-}
+/* Guía instalación */
+.install-guide{background:#FFF3E0;border-radius:12px;padding:15px;margin-bottom:15px;border-left:4px solid #FF6F00;display:none;}
+.install-guide-steps{background:white;border-radius:8px;padding:10px;}
+.step{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #FFE0B2;}
+.step:last-child{border-bottom:none;}
+.step-number{background:#FF6F00;color:white;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;}
+.install-guide-close{background:#FF6F00;border:none;color:white;padding:8px 16px;border-radius:20px;font-weight:700;cursor:pointer;width:100%;margin-top:10px;}
+
+/* Gestión de festivos */
+.festivos-list{max-height:200px;overflow-y:auto;}
+.festivo-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #F0F4F8;}
+.festivo-fecha{font-weight:600;color:#6A1B9A;}
+.festivo-desc{font-size:12px;color:#78909C;}
+.btn-remove-festivo{background:none;border:none;color:#C62828;font-size:18px;cursor:pointer;padding:0 8px;}
 </style>
 </head>
 <body>
 
-<!-- PANTALLA DE CARGA (SPLASH SCREEN) -->
+<!-- SPLASH -->
 <div class="splash-screen" id="splash">
   <div class="splash-icon">🏗️</div>
   <div class="splash-title">Control trabajadores</div>
@@ -251,32 +195,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
   <div class="tab" onclick="showTab('gestion')">⚙️ Gestión</div>
 </div>
 
-<!-- GUÍA DE INSTALACIÓN -->
+<!-- Guía instalación -->
 <div class="install-guide" id="installGuide">
-  <div class="install-guiderow">
-    <span class="install-guide-icon">📱</span>
-    <span class="install-guide-text">¡Instala esta app en tu móvil!</span>
-  </div>
-  
   <div class="install-guide-steps">
-    <div class="step">
-      <span class="step-number">1</span>
-      <span class="step-text">En <strong>Chrome</strong>, pulsa el menú <strong>⋮</strong></span>
-    </div>
-    <div class="step">
-      <span class="step-number">2</span>
-      <span class="step-text">Busca y pulsa <strong>"Añadir a pantalla de inicio"</strong></span>
-    </div>
-    <div class="step">
-      <span class="step-number">3</span>
-      <span class="step-text">Ponle nombre y pulsa <strong>"Añadir"</strong></span>
-    </div>
+    <div class="step"><span class="step-number">1</span><span>Menú ⋮ → "Añadir a pantalla de inicio"</span></div>
+    <div class="step"><span class="step-number">2</span><span>Pon nombre y pulsa "Añadir"</span></div>
   </div>
-  
   <button class="install-guide-close" onclick="cerrarGuia()">Entendido</button>
 </div>
 
-<!-- PESTAÑA TRABAJADORES -->
+<!-- Pestaña TRABAJADORES -->
 <div id="tab-trabajadores" class="content active">
   <div style="font-size:13px;color:#546E7A;margin-bottom:10px;" id="today-lbl"></div>
   <div class="card">
@@ -285,7 +213,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
   </div>
 </div>
 
-<!-- PESTAÑA OBRAS -->
+<!-- Pestaña OBRAS -->
 <div id="tab-obras" class="content">
   <div class="obra-sel-wrap">
     <select id="obra-filter" onchange="renderCalendar()">
@@ -312,9 +240,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
       <button class="cal-nav" onclick="cambiarMes(1)">›</button>
     </div>
     <div class="cal-grid">
-      <div class="cal-dh">
-        <span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sa</span><span>Do</span>
-      </div>
+      <div class="cal-dh"><span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sa</span><span>Do</span></div>
       <div class="cal-days" id="cal-days"></div>
     </div>
   </div>
@@ -325,63 +251,55 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
   </div>
 </div>
 
-<!-- PESTAÑA RESUMEN CON BOTÓN GMAIL -->
+<!-- Pestaña RESUMEN -->
 <div id="tab-resumen" class="content">
   <div class="resumen-header">
     <button class="resumen-nav" onclick="cambiarMesResumen(-1)">‹</button>
-    <div style="text-align:center;">
-      <div style="font-size:16px;font-weight:800;" id="res-mes"></div>
-      <div style="font-size:11px;" id="res-total"></div>
-    </div>
+    <div><div style="font-size:16px;font-weight:800;" id="res-mes"></div><div style="font-size:11px;" id="res-total"></div></div>
     <button class="resumen-nav" onclick="cambiarMesResumen(1)">›</button>
   </div>
   
-  <!-- BOTÓN DE ENVIO POR GMAIL + EXPORTAR A MANOBRACAN -->
   <div class="resumen-actions">
-    <button class="btn-gmail" onclick="enviarPorGmail()">
-      <span>📧</span> Enviar por Gmail
-    </button>
-    <button class="btn-gmail" style="background:#1565C0;box-shadow:0 2px 8px rgba(21,101,192,.35);" onclick="exportarParaManobracan()">
-      <span>💾</span> Exportar a Manobracan
-    </button>
+    <button class="btn-gmail" onclick="enviarPorGmail()">📧 Enviar por Gmail</button>
+    <button class="btn-gmail" style="background:#1565C0;" onclick="exportarParaManobracan()">💾 Exportar a Manobracan</button>
   </div>
   
   <div id="resumen-contenido"></div>
 </div>
 
-<!-- PESTAÑA GESTIÓN -->
+<!-- Pestaña GESTIÓN -->
 <div id="tab-gestion" class="content">
-
-  <!-- COPIA DE SEGURIDAD -->
   <div class="card" style="margin-bottom:14px;">
     <div class="card-header" style="background:linear-gradient(135deg,#4A148C,#6A1B9A);">
       <span>💾 Copia de seguridad</span>
     </div>
     <div style="padding:14px;display:flex;flex-direction:column;gap:10px;">
-      <p style="font-size:13px;color:#546E7A;line-height:1.5;">
-        Guarda una copia de todos tus datos (trabajadores, obras y asignaciones) en un fichero <strong>.json</strong>.
-        Úsala para <strong>no perder nada</strong> si actualizas la app o cambias de dispositivo.
-      </p>
-      <button class="btn btn-primary" style="font-size:14px;padding:13px;" onclick="exportarBackup()">
-        📤 Guardar copia de seguridad
-      </button>
-      <button class="btn" style="background:linear-gradient(135deg,#4A148C,#6A1B9A);color:#fff;font-size:14px;padding:13px;" onclick="document.getElementById('input-restaurar').click()">
-        📥 Restaurar copia de seguridad
-      </button>
-      <p style="font-size:11px;color:#B0BEC5;text-align:center;" id="backup-fecha-lbl"></p>
+      <p style="font-size:13px;color:#546E7A;">Guarda/restaura todos tus datos (trabajadores, obras y asignaciones)</p>
+      <button class="btn btn-primary" style="padding:13px;" onclick="exportarBackup()">📤 Guardar copia</button>
+      <button class="btn" style="background:#6A1B9A;color:#fff;padding:13px;" onclick="document.getElementById('input-restaurar').click()">📥 Restaurar copia</button>
+      <button class="btn" style="background:#FF6F00;color:#fff;padding:13px;" onclick="importarDesdeManobracan()">📥 Importar desde Manobracan (JSON)</button>
+      <p style="font-size:11px;color:#B0BEC5;" id="backup-fecha-lbl"></p>
+    </div>
+  </div>
+
+  <!-- APARTADO DE DÍAS FESTIVOS -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-header" style="background:linear-gradient(135deg,#6A1B9A,#8E24AA);">
+      <span>📅 Días Festivos</span>
+      <button onclick="abrirModalFestivo()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 13px;border-radius:14px;">+ Añadir</button>
+    </div>
+    <div style="padding:10px;">
+      <div id="festivos-list" class="festivos-list"></div>
+      <p style="font-size:11px;color:#B0BEC5;text-align:center;margin-top:8px;">Los días marcados como festivos se pagan a precio de hora especial</p>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-header">
-      <span>Obras</span>
-      <button onclick="abrirModalObra()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 13px;border-radius:14px;cursor:pointer;">+ Nueva</button>
-    </div>
+    <div class="card-header"><span>🏗️ Obras</span><button onclick="abrirModalObra()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 13px;border-radius:14px;">+ Nueva</button></div>
     <div id="obras-list"></div>
   </div>
 </div>
 
-<!-- Input oculto para restaurar backup -->
 <input type="file" id="input-restaurar" accept=".json" style="display:none;" onchange="restaurarBackup(this)">
 
 <button class="fab" id="fab" onclick="abrirModalTrabajador()">＋</button>
@@ -401,6 +319,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
     <div class="fg"><label>Trabajador</label><select id="edit-trabajador"></select></div>
     <div class="fg"><label>Obra</label><select id="edit-obra"></select></div>
     <div class="fg"><label>Horas</label><input type="number" id="edit-horas" step="0.5" min="0" max="24"></div>
+    <div class="checkbox-row"><input type="checkbox" id="edit-esFestivo"><label>📅 Marcar como día festivo</label></div>
     <div class="modal-btns">
       <button class="btn btn-cancel" onclick="cerrarModal('modal-editar-asignacion')">Cancelar</button>
       <button class="btn btn-danger" onclick="eliminarAsignacion()">Eliminar</button>
@@ -426,8 +345,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
 <div class="modal-overlay" id="modal-obra">
   <div class="modal">
     <h2 id="modal-obra-titulo">Nueva Obra</h2>
-    <div class="fg"><label>Nombre</label><input id="o-nombre" placeholder="Nombre de la obra"></div>
-    <div class="fg"><label>Dirección</label><input id="o-direccion" placeholder="Dirección"></div>
+    <div class="fg"><label>Nombre de la obra *</label><input id="o-nombre" placeholder="Ej: Edificio Centro"></div>
+    <div class="fg"><label>Dirección</label><input id="o-direccion" placeholder="Dirección (opcional)"></div>
     <div class="modal-btns">
       <button class="btn btn-cancel" onclick="cerrarModal('modal-obra')">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarObra()">Guardar</button>
@@ -435,33 +354,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
   </div>
 </div>
 
+<!-- Modal Festivo -->
+<div class="modal-overlay" id="modal-festivo">
+  <div class="modal">
+    <h2>➕ Añadir Día Festivo</h2>
+    <div class="fg"><label>Fecha</label><input type="date" id="festivo-fecha"></div>
+    <div class="fg"><label>Descripción (opcional)</label><input id="festivo-desc" placeholder="Ej: 1 de Mayo"></div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="cerrarModal('modal-festivo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarFestivo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// Datos iniciales
+// ==================== DATOS INICIALES ====================
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const COLORES = ['#1565C0','#2E7D32','#6A1B9A','#E65100','#00838F','#AD1457','#C62828','#0277BD','#4A148C','#33691E'];
 
-// Estado de la aplicación
-let obras = [
-  {id:1, nombre:'Edificio Centro', direccion:'C/ Mayor 10'},
-  {id:2, nombre:'Nave Industrial', direccion:'Pol. Norte'},
-  {id:3, nombre:'Viviendas Sur', direccion:'Av. Andalucía 45'}
-];
-let trabajadores = [
-  {id:1, nombre:'Carlos', apellidos:'García'},
-  {id:2, nombre:'María', apellidos:'Martínez'},
-  {id:3, nombre:'José', apellidos:'Fernández'}
-];
-let asignaciones = [
-  {trabajadorId:1, obraId:1, fecha:new Date().toISOString().split('T')[0], horas:8},
-  {trabajadorId:2, obraId:2, fecha:new Date().toISOString().split('T')[0], horas:6},
-  {trabajadorId:3, obraId:3, fecha:new Date().toISOString().split('T')[0], horas:7.5}
-];
+let obras = [];
+let trabajadores = [];
+let asignaciones = [];
+let festivos = [];
 
-let siguienteIdTrabajador = 10;
-let siguienteIdObra = 10;
+let siguienteIdTrabajador = 1;
+let siguienteIdObra = 1;
 let fechaActual = new Date().toISOString().split('T')[0];
 let añoCalendario = new Date().getFullYear();
 let mesCalendario = new Date().getMonth();
@@ -471,54 +390,13 @@ let mesResumen = new Date().getMonth();
 let trabajadorSeleccionado = null;
 let editandoTrabajadorId = null;
 let editandoObraId = null;
-let editandoAsignacion = null;
+let editandoAsignacion = null; // guarda la asignación original que se está editando
 
-// Función para obtener el día de la semana (0 = Domingo, 6 = Sábado)
-function getDiaSemana(fechaStr) {
-  const fecha = new Date(fechaStr);
-  return fecha.getDay();
-}
-
-// Función para determinar si es fin de semana (sábado o domingo)
-function esFinDeSemana(fechaStr) {
-  const dia = getDiaSemana(fechaStr);
-  return dia === 0 || dia === 6;
-}
-
-// Función para obtener el nombre del día de la semana
-function getNombreDia(fechaStr) {
-  const dia = getDiaSemana(fechaStr);
-  return DIAS_SEMANA[dia];
-}
-
-// Detectar si está instalada como app
-function isRunningStandalone() {
-  return window.matchMedia('(display-mode: standalone)').matches || 
-         window.navigator.standalone === true ||
-         document.referrer.includes('android-app://');
-}
-
-// Ocultar splash screen
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    document.getElementById('splash').classList.add('hide');
-    actualizarEtiquetaBackup();
-  }, 1000);
-  
-  if (!isRunningStandalone() && !localStorage.getItem('guia_instalacion_cerrada')) {
-    document.getElementById('installGuide').style.display = 'block';
-  }
-});
-
-// Utilidades de almacenamiento
-const STORAGE_KEY = 'app_obras';
+// ==================== STORAGE ====================
+const STORAGE_KEY = 'app_obras_v5'; // cambio de versión por nueva estructura
 
 function guardarEnStorage() {
-  const payload = {
-    obras, trabajadores, asignaciones,
-    siguienteIdTrabajador, siguienteIdObra,
-    ultimaModificacion: new Date().toISOString()
-  };
+  const payload = { obras, trabajadores, asignaciones, festivos, siguienteIdTrabajador, siguienteIdObra, ultimaModificacion: new Date().toISOString() };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   actualizarEtiquetaBackup();
 }
@@ -528,101 +406,45 @@ function cargarStorage() {
     const datos = localStorage.getItem(STORAGE_KEY);
     if (datos) {
       const parsed = JSON.parse(datos);
-      obras = parsed.obras || obras;
-      trabajadores = parsed.trabajadores || trabajadores;
-      asignaciones = parsed.asignaciones || asignaciones;
-      siguienteIdTrabajador = parsed.siguienteIdTrabajador || 10;
-      siguienteIdObra = parsed.siguienteIdObra || 10;
-    }
-  } catch(e) {}
-}
-
-function actualizarEtiquetaBackup() {
-  const lbl = document.getElementById('backup-fecha-lbl');
-  if (!lbl) return;
-  try {
-    const datos = localStorage.getItem(STORAGE_KEY);
-    if (datos) {
-      const parsed = JSON.parse(datos);
-      if (parsed.ultimaModificacion) {
-        const d = new Date(parsed.ultimaModificacion);
-        lbl.textContent = `Último guardado en este dispositivo: ${d.toLocaleDateString('es-ES')} ${d.toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'})}`;
-      }
-    }
-  } catch(e) {}
-}
-
-// ── EXPORTAR BACKUP COMPLETO ─────────────────────────────────────────────
-function exportarBackup() {
-  const payload = {
-    _tipo: 'backup_control_trabajadores',
-    _version: '1.0',
-    _fecha: new Date().toISOString(),
-    obras, trabajadores, asignaciones,
-    siguienteIdTrabajador, siguienteIdObra
-  };
-  const json = JSON.stringify(payload, null, 2);
-  const blob = new Blob([json], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const fecha = new Date().toISOString().slice(0, 10);
-  a.href = url;
-  a.download = `backup_trabajadores_${fecha}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  mostrarToast(`✅ Copia guardada (${trabajadores.length} trabajadores, ${asignaciones.length} asignaciones)`);
-}
-
-// ── RESTAURAR BACKUP ─────────────────────────────────────────────────────
-function restaurarBackup(input) {
-  const file = input.files[0];
-  if (!file) return;
-  input.value = '';
-
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const parsed = JSON.parse(e.target.result);
-      const tieneDatos = parsed.obras || parsed.trabajadores || parsed.asignaciones;
-
-      if (!tieneDatos) {
-        mostrarToast('❌ El fichero no contiene datos válidos');
-        return;
-      }
-
-      const numTrab = (parsed.trabajadores || []).length;
-      const numAsig = (parsed.asignaciones || []).length;
-      const numObras = (parsed.obras || []).length;
-
-      if (!confirm(
-        `¿Restaurar esta copia?\n\n` +
-        `👷 Trabajadores: ${numTrab}\n` +
-        `🏗️ Obras: ${numObras}\n` +
-        `📋 Asignaciones: ${numAsig}\n\n` +
-        `⚠️ Se reemplazarán todos los datos actuales.`
-      )) return;
-
-      obras        = parsed.obras        || [];
+      obras = parsed.obras || [];
       trabajadores = parsed.trabajadores || [];
       asignaciones = parsed.asignaciones || [];
-      siguienteIdTrabajador = parsed.siguienteIdTrabajador || (Math.max(0, ...trabajadores.map(t => t.id)) + 1);
-      siguienteIdObra       = parsed.siguienteIdObra       || (Math.max(0, ...obras.map(o => o.id)) + 1);
-
-      guardarEnStorage();
-      renderTodo();
-      mostrarToast(`✅ Restaurado: ${numTrab} trabajadores, ${numAsig} asignaciones`);
-
-    } catch(err) {
-      mostrarToast('❌ Error al leer el fichero: ' + err.message);
+      festivos = parsed.festivos || [];
+      siguienteIdTrabajador = parsed.siguienteIdTrabajador || 1;
+      siguienteIdObra = parsed.siguienteIdObra || 1;
     }
-  };
-  reader.readAsText(file);
+  } catch(e) { console.error(e); }
+  
+  if (obras.length === 0) {
+    obras = [
+      {id: siguienteIdObra++, nombre: 'Edificio Centro', direccion: 'C/ Mayor 10'},
+      {id: siguienteIdObra++, nombre: 'Nave Industrial', direccion: 'Pol. Norte'},
+      {id: siguienteIdObra++, nombre: 'Viviendas Sur', direccion: 'Av. Andalucía 45'}
+    ];
+    trabajadores = [
+      {id: siguienteIdTrabajador++, nombre: 'Carlos', apellidos: 'García'},
+      {id: siguienteIdTrabajador++, nombre: 'María', apellidos: 'Martínez'},
+      {id: siguienteIdTrabajador++, nombre: 'José', apellidos: 'Fernández'}
+    ];
+    festivos = [
+      {fecha: '2026-01-01', descripcion: 'Año Nuevo'},
+      {fecha: '2026-01-06', descripcion: 'Reyes Magos'},
+      {fecha: '2026-04-03', descripcion: 'Viernes Santo'},
+      {fecha: '2026-05-01', descripcion: 'Día del Trabajador'},
+      {fecha: '2026-08-15', descripcion: 'Asunción'},
+      {fecha: '2026-10-12', descripcion: 'Fiesta Nacional'},
+      {fecha: '2026-11-01', descripcion: 'Todos los Santos'},
+      {fecha: '2026-12-06', descripcion: 'Día de la Constitución'},
+      {fecha: '2026-12-08', descripcion: 'Inmaculada Concepción'},
+      {fecha: '2026-12-25', descripcion: 'Navidad'}
+    ];
+    guardarEnStorage();
+  }
 }
 
 cargarStorage();
 
+// ==================== UTILIDADES ====================
 function mostrarToast(msg) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
@@ -636,14 +458,9 @@ function formatearFecha(fecha) {
   return `${+d} de ${MESES[+m-1]} de ${y}`;
 }
 
-function iniciales(n, a) {
-  return ((n || '')[0] || '') + ((a || '')[0] || '').toUpperCase();
-}
+function iniciales(n, a) { return ((n||'')[0]||'') + ((a||'')[0]||'').toUpperCase(); }
 
-function nombreObra(id) {
-  const o = obras.find(o => o.id == id);
-  return o ? o.nombre : 'Sin asignar';
-}
+function nombreObra(id) { const o = obras.find(o => o.id == id); return o ? o.nombre : 'Sin asignar'; }
 
 function colorObra(id) {
   if (!id) return '#78909C';
@@ -651,78 +468,89 @@ function colorObra(id) {
   return COLORES[i % COLORES.length];
 }
 
-function getAsignacion(trabajadorId, fecha) {
-  return asignaciones.find(a => a.trabajadorId === trabajadorId && a.fecha === fecha);
+// Obtiene todas las asignaciones de un trabajador en una fecha
+function getAsignaciones(trabajadorId, fecha) {
+  return asignaciones.filter(a => a.trabajadorId === trabajadorId && a.fecha === fecha);
 }
 
-function setAsignacion(trabajadorId, obraId, fecha, horas) {
-  const existente = asignaciones.find(a => a.trabajadorId === trabajadorId && a.fecha === fecha);
-  if (existente) {
-    if (obraId) {
-      existente.obraId = obraId;
-      existente.horas = horas;
-    } else {
-      asignaciones = asignaciones.filter(a => !(a.trabajadorId === trabajadorId && a.fecha === fecha));
-    }
-  } else if (obraId) {
-    asignaciones.push({trabajadorId, obraId, fecha, horas: horas || 0});
+// Asigna o actualiza una asignación específica (trabajador, fecha, obra)
+// Si ya existe exactamente esa combinación, actualiza horas y festivo.
+// Si no existe, la añade sin eliminar otras.
+function setAsignacion(trabajadorId, obraId, fecha, horas, esFestivo = false) {
+  const idx = asignaciones.findIndex(a => a.trabajadorId === trabajadorId && a.fecha === fecha && a.obraId === obraId);
+  if (idx !== -1) {
+    asignaciones[idx] = { ...asignaciones[idx], horas, esFestivo };
+  } else {
+    asignaciones.push({ trabajadorId, obraId, fecha, horas: horas || 0, esFestivo: esFestivo || false });
   }
   guardarEnStorage();
 }
 
-// Cerrar guía
+// Elimina una asignación concreta
+function eliminarAsignacionExacta(trabajadorId, fecha, obraId) {
+  asignaciones = asignaciones.filter(a => !(a.trabajadorId === trabajadorId && a.fecha === fecha && a.obraId === obraId));
+  guardarEnStorage();
+}
+
 function cerrarGuia() {
   document.getElementById('installGuide').style.display = 'none';
   localStorage.setItem('guia_instalacion_cerrada', 'true');
 }
 
-// Tabs
+// ==================== TABS ====================
 function showTab(tab) {
   document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  
   document.getElementById(`tab-${tab}`).classList.add('active');
   document.querySelector(`.tab[onclick="showTab('${tab}')"]`).classList.add('active');
   document.querySelector(`.nav-item[onclick="showTab('${tab}')"]`).classList.add('active');
-  
   document.getElementById('fab').style.display = (tab === 'gestion' || tab === 'resumen') ? 'none' : 'flex';
-  
   if (tab === 'obras') {
     llenarSelectTrabajadores();
     document.getElementById('asignacion-fecha').value = fechaActual;
     document.getElementById('asignacion-horas').value = 8;
   }
   if (tab === 'resumen') renderResumen();
+  if (tab === 'gestion') renderFestivos();
 }
 
-// Trabajadores
+// ==================== TRABAJADORES ====================
 function renderTrabajadores() {
   const lista = document.getElementById('workers-list');
   const total = document.getElementById('wcount');
-  
   total.textContent = trabajadores.length + ' trabajador' + (trabajadores.length !== 1 ? 'es' : '');
-  
-  if (!trabajadores.length) {
-    lista.innerHTML = '<div class="empty-state">Pulsa ＋ para añadir trabajadores</div>';
-    return;
-  }
+  if (!trabajadores.length) { lista.innerHTML = '<div class="empty-state">Pulsa ＋ para añadir trabajadores</div>'; return; }
   
   lista.innerHTML = trabajadores.map(t => {
-    const asignacion = getAsignacion(t.id, fechaActual);
-    const obraId = asignacion ? asignacion.obraId : null;
-    const horas = asignacion ? asignacion.horas : 0;
-    return `
-      <div class="worker-item">
-        <div class="avatar" style="background:${colorObra(obraId)}">${iniciales(t.nombre, t.apellidos)}</div>
+    const asignsHoy = getAsignaciones(t.id, fechaActual);
+    if (asignsHoy.length === 0) {
+      return `<div class="worker-item">
+        <div class="avatar" style="background:#78909C">${iniciales(t.nombre, t.apellidos)}</div>
         <div style="flex:1">
           <div style="font-weight:700">${t.nombre} ${t.apellidos}</div>
-          <div><span class="obra-badge">${nombreObra(obraId)}</span>${horas > 0 ? `<span class="horas-badge">🕒 ${horas}h</span>` : ''}</div>
+          <div><span class="obra-badge">Sin obra hoy</span></div>
         </div>
         <button class="btn-icon" onclick="editarTrabajador(${t.id})">✏️</button>
         <button class="btn-icon" onclick="eliminarTrabajador(${t.id})">🗑️</button>
+      </div>`;
+    }
+    // Mostrar todas las asignaciones del día
+    const badges = asignsHoy.map(asig => {
+      const obra = obras.find(o => o.id === asig.obraId);
+      const horas = asig.horas;
+      const esFestivo = asig.esFestivo || festivos.some(f => f.fecha === fechaActual);
+      return `<div><span class="obra-badge" style="background:${colorObra(asig.obraId)}20; color:${colorObra(asig.obraId)}">${obra ? obra.nombre : '?'}</span><span class="horas-badge">🕒 ${horas}h</span>${esFestivo ? '<span class="festivo-badge">📅 Festivo</span>' : ''}</div>`;
+    }).join('');
+    return `<div class="worker-item">
+      <div class="avatar" style="background:${colorObra(asignsHoy[0].obraId)}">${iniciales(t.nombre, t.apellidos)}</div>
+      <div style="flex:1">
+        <div style="font-weight:700">${t.nombre} ${t.apellidos}</div>
+        <div>${badges}</div>
       </div>
-    `;
+      <button class="btn-icon" onclick="editarTrabajador(${t.id})">✏️</button>
+      <button class="btn-icon" onclick="eliminarTrabajador(${t.id})">🗑️</button>
+    </div>`;
   }).join('');
 }
 
@@ -747,101 +575,39 @@ function editarTrabajador(id) {
 function guardarTrabajador() {
   const nombre = document.getElementById('w-nombre').value.trim();
   const apellidos = document.getElementById('w-apellidos').value.trim();
-  
-  if (!nombre || !apellidos) {
-    mostrarToast('⚠️ Nombre y apellidos son obligatorios');
-    return;
-  }
-  
+  if (!nombre || !apellidos) { mostrarToast('⚠️ Nombre y apellidos son obligatorios'); return; }
   if (editandoTrabajadorId) {
     const t = trabajadores.find(t => t.id === editandoTrabajadorId);
-    t.nombre = nombre;
-    t.apellidos = apellidos;
+    t.nombre = nombre; t.apellidos = apellidos;
     mostrarToast('✅ Trabajador actualizado');
   } else {
-    trabajadores.push({
-      id: siguienteIdTrabajador++,
-      nombre,
-      apellidos
-    });
+    trabajadores.push({ id: siguienteIdTrabajador++, nombre, apellidos });
     mostrarToast('✅ Trabajador añadido');
   }
-  
   cerrarModal('modal-trabajador');
   renderTodo();
 }
 
 function eliminarTrabajador(id) {
-  if (confirm('¿Eliminar trabajador? También se borrarán sus asignaciones.')) {
+  if (confirm('¿Eliminar trabajador?')) {
     trabajadores = trabajadores.filter(t => t.id !== id);
     asignaciones = asignaciones.filter(a => a.trabajadorId !== id);
     guardarEnStorage();
     renderTodo();
-    mostrarToast('🗑️ Trabajador eliminado');
+    mostrarToast('🗑️ Eliminado');
   }
 }
 
-// Asignaciones desde pestaña Obras
-function llenarSelectTrabajadores() {
-  const select = document.getElementById('trabajador-select');
-  select.innerHTML = '<option value="">— Selecciona trabajador —</option>' + 
-    trabajadores.map(t => `<option value="${t.id}">${t.nombre} ${t.apellidos}</option>`).join('');
-}
-
-function asignarTrabajadorAObra() {
-  const obraId = parseInt(document.getElementById('obra-filter').value);
-  const trabajadorId = parseInt(document.getElementById('trabajador-select').value);
-  const fecha = document.getElementById('asignacion-fecha').value;
-  const horas = parseFloat(document.getElementById('asignacion-horas').value) || 0;
-  
-  if (!obraId) {
-    mostrarToast('⚠️ Selecciona una obra');
-    return;
-  }
-  
-  if (!trabajadorId) {
-    mostrarToast('⚠️ Selecciona un trabajador');
-    return;
-  }
-  
-  if (!fecha) {
-    mostrarToast('⚠️ Selecciona una fecha');
-    return;
-  }
-  
-  if (horas <= 0) {
-    mostrarToast('⚠️ Las horas deben ser mayores a 0');
-    return;
-  }
-  
-  setAsignacion(trabajadorId, obraId, fecha, horas);
-  renderCalendar();
-  mostrarToast(`✅ ${trabajadores.find(t => t.id === trabajadorId).nombre} asignado a ${nombreObra(obraId)} con ${horas}h`);
-  
-  document.getElementById('trabajador-select').value = '';
-  document.getElementById('asignacion-horas').value = 8;
-}
-
-// Obras
+// ==================== OBRAS ====================
 function renderObras() {
   const lista = document.getElementById('obras-list');
-  
-  if (!obras.length) {
-    lista.innerHTML = '<div class="empty-state">No hay obras registradas</div>';
-    return;
-  }
-  
-  lista.innerHTML = obras.map((o, i) => `
-    <div class="worker-item">
-      <div style="width:12px;height:12px;border-radius:50%;background:${COLORES[i % COLORES.length]};"></div>
-      <div style="flex:1">
-        <div style="font-weight:700">${o.nombre}</div>
-        <div style="font-size:12px;color:#78909C">${o.direccion || 'Sin dirección'}</div>
-      </div>
-      <button class="btn-icon" onclick="editarObra(${o.id})">✏️</button>
-      <button class="btn-icon" onclick="eliminarObra(${o.id})">🗑️</button>
-    </div>
-  `).join('');
+  if (!obras.length) { lista.innerHTML = '<div class="empty-state">No hay obras registradas</div>'; return; }
+  lista.innerHTML = obras.map((o, i) => `<div class="worker-item">
+    <div style="width:12px;height:12px;border-radius:50%;background:${COLORES[i % COLORES.length]};"></div>
+    <div style="flex:1"><div style="font-weight:700">${o.nombre}</div><div style="font-size:12px;color:#78909C">${o.direccion || 'Sin dirección'}</div></div>
+    <button class="btn-icon" onclick="editarObra(${o.id})">✏️</button>
+    <button class="btn-icon" onclick="eliminarObra(${o.id})">🗑️</button>
+  </div>`).join('');
 }
 
 function abrirModalObra() {
@@ -864,27 +630,16 @@ function editarObra(id) {
 
 function guardarObra() {
   const nombre = document.getElementById('o-nombre').value.trim();
+  if (!nombre) { mostrarToast('⚠️ El nombre es obligatorio'); return; }
   const direccion = document.getElementById('o-direccion').value.trim();
-  
-  if (!nombre) {
-    mostrarToast('⚠️ El nombre es obligatorio');
-    return;
-  }
-  
   if (editandoObraId) {
     const o = obras.find(o => o.id === editandoObraId);
-    o.nombre = nombre;
-    o.direccion = direccion;
+    o.nombre = nombre; o.direccion = direccion;
     mostrarToast('✅ Obra actualizada');
   } else {
-    obras.push({
-      id: siguienteIdObra++,
-      nombre,
-      direccion
-    });
+    obras.push({ id: siguienteIdObra++, nombre, direccion });
     mostrarToast('✅ Obra añadida');
   }
-  
   cerrarModal('modal-obra');
   renderTodo();
 }
@@ -899,14 +654,35 @@ function eliminarObra(id) {
   }
 }
 
-// Calendario
+// ==================== ASIGNACIONES ====================
+function llenarSelectTrabajadores() {
+  const select = document.getElementById('trabajador-select');
+  select.innerHTML = '<option value="">— Selecciona trabajador —</option>' + trabajadores.map(t => `<option value="${t.id}">${t.nombre} ${t.apellidos}</option>`).join('');
+}
+
 function llenarSelectObras(valorSeleccionado) {
   const select = document.getElementById('obra-filter');
-  select.innerHTML = '<option value="">— Selecciona una obra —</option>' + 
-    obras.map(o => `<option value="${o.id}">${o.nombre}</option>`).join('');
+  select.innerHTML = '<option value="">— Selecciona una obra —</option>' + obras.map(o => `<option value="${o.id}">${o.nombre}</option>`).join('');
   if (valorSeleccionado) select.value = valorSeleccionado;
 }
 
+function asignarTrabajadorAObra() {
+  const obraId = parseInt(document.getElementById('obra-filter').value);
+  const trabajadorId = parseInt(document.getElementById('trabajador-select').value);
+  const fecha = document.getElementById('asignacion-fecha').value;
+  const horas = parseFloat(document.getElementById('asignacion-horas').value) || 0;
+  if (!obraId) { mostrarToast('⚠️ Selecciona una obra'); return; }
+  if (!trabajadorId) { mostrarToast('⚠️ Selecciona un trabajador'); return; }
+  if (!fecha) { mostrarToast('⚠️ Selecciona una fecha'); return; }
+  if (horas <= 0) { mostrarToast('⚠️ Horas > 0'); return; }
+  setAsignacion(trabajadorId, obraId, fecha, horas, false);
+  renderCalendar();
+  mostrarToast(`✅ Asignado: ${trabajadores.find(t => t.id === trabajadorId).nombre} - ${horas}h en ${nombreObra(obraId)}`);
+  document.getElementById('trabajador-select').value = '';
+  document.getElementById('asignacion-horas').value = 8;
+}
+
+// ==================== CALENDARIO ====================
 function cambiarMes(delta) {
   mesCalendario += delta;
   if (mesCalendario < 0) { mesCalendario = 11; añoCalendario--; }
@@ -916,128 +692,113 @@ function cambiarMes(delta) {
 
 function renderCalendar() {
   document.getElementById('cal-lbl').textContent = MESES[mesCalendario] + ' ' + añoCalendario;
-  
   const filtroId = parseInt(document.getElementById('obra-filter').value) || null;
   const primerDia = new Date(añoCalendario, mesCalendario, 1).getDay();
   const diasEnMes = new Date(añoCalendario, mesCalendario + 1, 0).getDate();
   const offset = primerDia === 0 ? 6 : primerDia - 1;
+  
+  const festivosSet = new Set(festivos.map(f => f.fecha));
   
   let html = '';
   for (let i = 0; i < offset; i++) html += '<div class="cal-day empty"></div>';
   
   for (let d = 1; d <= diasEnMes; d++) {
     const fecha = `${añoCalendario}-${String(mesCalendario+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const tieneAsignaciones = asignaciones.some(a => a.fecha === fecha && (!filtroId || a.obraId === filtroId));
-    const clases = ['cal-day'];
-    if (fecha === fechaActual) clases.push('today');
-    if (fecha === fechaSeleccionada) clases.push('selected');
-    if (tieneAsignaciones) clases.push('has-w');
+    const asignacionesDia = asignaciones.filter(a => a.fecha === fecha && (!filtroId || a.obraId === filtroId));
+    const tieneHoras = asignacionesDia.some(a => a.horas > 0);
+    const tieneFestivo = asignacionesDia.some(a => a.esFestivo === true) || festivosSet.has(fecha);
+    let clases = 'cal-day';
+    if (fecha === fechaActual) clases += ' today';
+    if (fecha === fechaSeleccionada) clases += ' selected';
+    if (tieneHoras) clases += ' has-w';
+    if (tieneFestivo) clases += ' has-fest';
     
-    html += `<div class="${clases.join(' ')}" onclick="seleccionarDia('${fecha}')">${d}</div>`;
+    html += `<div class="${clases}" onclick="seleccionarDia('${fecha}')">${d}</div>`;
   }
   
   document.getElementById('cal-days').innerHTML = html;
   renderPanelDia(filtroId);
 }
 
-function seleccionarDia(fecha) {
-  fechaSeleccionada = fecha;
-  renderCalendar();
-}
+function seleccionarDia(fecha) { fechaSeleccionada = fecha; renderCalendar(); }
 
 function renderPanelDia(filtroId) {
   document.getElementById('dw-title').textContent = '📋 ' + formatearFecha(fechaSeleccionada);
-  
-  const asignacionesDia = asignaciones.filter(a => a.fecha === fechaSeleccionada && (!filtroId || a.obraId === filtroId));
-  
-  if (!asignacionesDia.length) {
-    document.getElementById('dw-list').innerHTML = '<div class="empty-state">No hay trabajadores este día</div>';
-    return;
-  }
-  
+  let asignacionesDia = asignaciones.filter(a => a.fecha === fechaSeleccionada && (!filtroId || a.obraId === filtroId));
+  if (!asignacionesDia.length) { document.getElementById('dw-list').innerHTML = '<div class="empty-state">No hay trabajadores este día</div>'; return; }
   document.getElementById('dw-list').innerHTML = asignacionesDia.map(a => {
     const t = trabajadores.find(t => t.id === a.trabajadorId);
     if (!t) return '';
-    return `
-      <div style="display:flex;align-items:center;padding:10px 13px;border-bottom:1px solid #F0F4F8;gap:10px;cursor:pointer;" onclick="abrirEditarAsignacion('${a.fecha}', ${a.trabajadorId})">
-        <div class="avatar" style="background:${colorObra(a.obraId)};width:36px;height:36px;font-size:12px;">${iniciales(t.nombre, t.apellidos)}</div>
-        <div style="flex:1">
-          <div style="font-weight:700">${t.nombre} ${t.apellidos}</div>
-          <div><span style="font-size:12px;color:#78909C">${nombreObra(a.obraId)}</span><span class="horas-badge" style="margin-left:6px;">🕒 ${a.horas}h</span></div>
-        </div>
-        <span style="color:#78909C;font-size:12px;">✏️</span>
-      </div>
-    `;
+    const festivosSet = new Set(festivos.map(f => f.fecha));
+    const esFestivoGlobal = festivosSet.has(a.fecha);
+    const esFestivo = a.esFestivo || esFestivoGlobal;
+    return `<div style="display:flex;align-items:center;padding:10px 13px;border-bottom:1px solid #F0F4F8;gap:10px;cursor:pointer;" onclick="abrirEditarAsignacion('${a.fecha}', ${a.trabajadorId}, ${a.obraId})">
+      <div class="avatar" style="background:${colorObra(a.obraId)};width:36px;height:36px;font-size:12px;">${iniciales(t.nombre, t.apellidos)}</div>
+      <div style="flex:1"><div style="font-weight:700">${t.nombre} ${t.apellidos}</div><div><span style="font-size:12px;color:#78909C">${nombreObra(a.obraId)}</span><span class="horas-badge">🕒 ${a.horas}h</span>${esFestivo ? '<span class="festivo-badge">📅 Festivo</span>' : ''}</div></div>
+      <span style="color:#78909C;">✏️</span>
+    </div>`;
   }).join('');
 }
 
-// Editar asignación
-function abrirEditarAsignacion(fecha, trabajadorId) {
-  const asignacion = asignaciones.find(a => a.fecha === fecha && a.trabajadorId === trabajadorId);
+// ==================== EDITAR ASIGNACIÓN ====================
+function abrirEditarAsignacion(fecha, trabajadorId, obraId) {
+  const asignacion = asignaciones.find(a => a.fecha === fecha && a.trabajadorId === trabajadorId && a.obraId === obraId);
   if (!asignacion) return;
-  
-  editandoAsignacion = { fecha, trabajadorId };
-  
+  editandoAsignacion = { ...asignacion }; // copia original
   document.getElementById('edit-fecha').value = fecha;
   document.getElementById('edit-horas').value = asignacion.horas;
-  
-  const selectTrabajador = document.getElementById('edit-trabajador');
-  selectTrabajador.innerHTML = trabajadores.map(t => 
-    `<option value="${t.id}" ${t.id === trabajadorId ? 'selected' : ''}>${t.nombre} ${t.apellidos}</option>`
-  ).join('');
-  
-  const selectObra = document.getElementById('edit-obra');
-  selectObra.innerHTML = obras.map(o => 
-    `<option value="${o.id}" ${o.id === asignacion.obraId ? 'selected' : ''}>${o.nombre}</option>`
-  ).join('');
-  
+  const festivosSet = new Set(festivos.map(f => f.fecha));
+  const esFestivoGlobal = festivosSet.has(fecha);
+  document.getElementById('edit-esFestivo').checked = asignacion.esFestivo === true || esFestivoGlobal;
+  document.getElementById('edit-trabajador').innerHTML = trabajadores.map(t => `<option value="${t.id}" ${t.id === trabajadorId ? 'selected' : ''}>${t.nombre} ${t.apellidos}</option>`).join('');
+  document.getElementById('edit-obra').innerHTML = obras.map(o => `<option value="${o.id}" ${o.id === obraId ? 'selected' : ''}>${o.nombre}</option>`).join('');
   abrirModal('modal-editar-asignacion');
 }
 
 function guardarEdicionAsignacion() {
   if (!editandoAsignacion) return;
-  
   const nuevaFecha = document.getElementById('edit-fecha').value;
   const nuevoTrabajadorId = parseInt(document.getElementById('edit-trabajador').value);
   const nuevaObraId = parseInt(document.getElementById('edit-obra').value);
   const nuevasHoras = parseFloat(document.getElementById('edit-horas').value);
+  let esFestivo = document.getElementById('edit-esFestivo').checked;
+  if (!nuevaFecha || !nuevoTrabajadorId || !nuevaObraId || nuevasHoras <= 0) { mostrarToast('⚠️ Completa todos los campos'); return; }
   
-  if (!nuevaFecha || !nuevoTrabajadorId || !nuevaObraId || nuevasHoras <= 0) {
-    mostrarToast('⚠️ Todos los campos son obligatorios y horas deben ser > 0');
-    return;
+  const festivosSet = new Set(festivos.map(f => f.fecha));
+  if (festivosSet.has(nuevaFecha)) esFestivo = true;
+  
+  // Si la obra o el trabajador cambian, añadimos nueva asignación sin eliminar la original
+  if (nuevoTrabajadorId !== editandoAsignacion.trabajadorId || nuevaObraId !== editandoAsignacion.obraId) {
+    // Crear nueva asignación
+    setAsignacion(nuevoTrabajadorId, nuevaObraId, nuevaFecha, nuevasHoras, esFestivo);
+    mostrarToast('✅ Nueva asignación creada (se mantuvo la anterior)');
+  } else {
+    // Mismo trabajador y misma obra: actualizar horas y festivo
+    const idx = asignaciones.findIndex(a => a.trabajadorId === editandoAsignacion.trabajadorId && a.fecha === editandoAsignacion.fecha && a.obraId === editandoAsignacion.obraId);
+    if (idx !== -1) {
+      asignaciones[idx] = { ...asignaciones[idx], horas: nuevasHoras, esFestivo };
+      guardarEnStorage();
+      mostrarToast('✅ Asignación actualizada');
+    }
   }
   
-  asignaciones = asignaciones.filter(a => !(a.fecha === editandoAsignacion.fecha && a.trabajadorId === editandoAsignacion.trabajadorId));
-  
-  asignaciones.push({
-    trabajadorId: nuevoTrabajadorId,
-    obraId: nuevaObraId,
-    fecha: nuevaFecha,
-    horas: nuevasHoras
-  });
-  
-  guardarEnStorage();
   cerrarModal('modal-editar-asignacion');
   renderTodo();
-  mostrarToast('✅ Asignación actualizada');
-  
   editandoAsignacion = null;
 }
 
 function eliminarAsignacion() {
   if (!editandoAsignacion) return;
-  
   if (confirm('¿Eliminar esta asignación?')) {
-    asignaciones = asignaciones.filter(a => !(a.fecha === editandoAsignacion.fecha && a.trabajadorId === editandoAsignacion.trabajadorId));
-    guardarEnStorage();
+    eliminarAsignacionExacta(editandoAsignacion.trabajadorId, editandoAsignacion.fecha, editandoAsignacion.obraId);
     cerrarModal('modal-editar-asignacion');
     renderTodo();
-    mostrarToast('🗑️ Asignación eliminada');
+    mostrarToast('🗑️ Eliminada');
     editandoAsignacion = null;
   }
 }
 
-// Resumen con envío por Gmail
+// ==================== RESUMEN ====================
 function cambiarMesResumen(delta) {
   mesResumen += delta;
   if (mesResumen < 0) { mesResumen = 11; añoResumen--; }
@@ -1047,316 +808,312 @@ function cambiarMesResumen(delta) {
 
 function renderResumen() {
   document.getElementById('res-mes').textContent = MESES[mesResumen] + ' ' + añoResumen;
-  
   const diasEnMes = new Date(añoResumen, mesResumen + 1, 0).getDate();
   const fechasMes = [];
-  for (let d = 1; d <= diasEnMes; d++) {
-    fechasMes.push(`${añoResumen}-${String(mesResumen+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
-  }
-  
+  for (let d = 1; d <= diasEnMes; d++) fechasMes.push(`${añoResumen}-${String(mesResumen+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
   const asignacionesMes = asignaciones.filter(a => fechasMes.includes(a.fecha));
   const totalHoras = asignacionesMes.reduce((sum, a) => sum + a.horas, 0);
-  const totalAsignaciones = asignacionesMes.length;
   const totalDias = new Set(asignacionesMes.map(a => a.fecha)).size;
+  document.getElementById('res-total').textContent = asignacionesMes.length ? `${totalHoras} horas · ${totalDias} días` : 'Sin actividad';
   
-  document.getElementById('res-total').textContent = 
-    totalAsignaciones ? `${totalHoras} horas · ${totalDias} días` : 'Sin actividad';
+  const festivosSet = new Set(festivos.map(f => f.fecha));
   
   let html = '<div class="resumen-lista-trabajadores">';
-  
   trabajadores.forEach(t => {
-    const asignacionesTrabajador = asignacionesMes.filter(a => a.trabajadorId === t.id);
-    if (!asignacionesTrabajador.length) return;
-    
-    const totalHorasTrabajador = asignacionesTrabajador.reduce((sum, a) => sum + a.horas, 0);
-    const totalDiasTrabajador = new Set(asignacionesTrabajador.map(a => a.fecha)).size;
+    const asigT = asignacionesMes.filter(a => a.trabajadorId === t.id);
+    if (!asigT.length) return;
+    const totalHorasT = asigT.reduce((sum, a) => sum + a.horas, 0);
+    const totalDiasT = new Set(asigT.map(a => a.fecha)).size;
     const activo = trabajadorSeleccionado === t.id;
-    
-    html += `
-      <div class="trabajador-resumen ${activo ? 'activo' : ''}" onclick="seleccionarTrabajador(${t.id})">
-        <div class="avatar" style="background:${colorObra(asignacionesTrabajador[0].obraId)};width:40px;height:40px;font-size:14px;">
-          ${iniciales(t.nombre, t.apellidos)}
-        </div>
-        <div class="trabajador-info">
-          <div class="trabajador-nombre">${t.nombre} ${t.apellidos}</div>
-          <div class="trabajador-total">${totalHorasTrabajador}h · ${totalDiasTrabajador} día${totalDiasTrabajador !== 1 ? 's' : ''}</div>
-        </div>
-        <span style="color:#1565C0;font-size:20px;">${activo ? '▼' : '▶'}</span>
-      </div>
-    `;
-    
+    html += `<div class="trabajador-resumen ${activo ? 'activo' : ''}" onclick="seleccionarTrabajador(${t.id})">
+      <div class="avatar" style="background:${colorObra(asigT[0].obraId)};width:40px;height:40px;">${iniciales(t.nombre, t.apellidos)}</div>
+      <div class="trabajador-info"><div class="trabajador-nombre">${t.nombre} ${t.apellidos}</div><div class="trabajador-total">${totalHorasT}h · ${totalDiasT} día${totalDiasT !== 1 ? 's' : ''}</div></div>
+      <span style="color:#1565C0;">${activo ? '▼' : '▶'}</span>
+    </div>`;
     if (activo) {
-      const obrasTrabajador = {};
-      asignacionesTrabajador.forEach(a => {
-        if (!obrasTrabajador[a.obraId]) obrasTrabajador[a.obraId] = [];
-        obrasTrabajador[a.obraId].push({
-          fecha: a.fecha,
-          dia: parseInt(a.fecha.split('-')[2]),
-          horas: a.horas,
-          esFinSemana: esFinDeSemana(a.fecha)
-        });
-      });
-      
-      Object.keys(obrasTrabajador).forEach(obraId => {
+      const obrasT = {};
+      asigT.forEach(a => { if (!obrasT[a.obraId]) obrasT[a.obraId] = []; obrasT[a.obraId].push({ dia: parseInt(a.fecha.split('-')[2]), horas: a.horas, esFestivoGlobal: festivosSet.has(a.fecha), esFestivoAsignacion: a.esFestivo }); });
+      Object.keys(obrasT).forEach(obraId => {
         const obra = obras.find(o => o.id == obraId);
-        const dias = obrasTrabajador[obraId].sort((a,b) => a.dia - b.dia);
-        const totalHorasObra = dias.reduce((sum, d) => sum + d.horas, 0);
-        
-        html += `
-          <div class="obra-detalle">
-            <div class="obra-detalle-header">
-              <div style="width:10px;height:10px;border-radius:50%;background:${colorObra(obraId)};"></div>
-              <span class="obra-detalle-nombre">${obra ? obra.nombre : 'Obra'}</span>
-              <span class="obra-detalle-total">${totalHorasObra}h · ${dias.length} día${dias.length !== 1 ? 's' : ''}</span>
-            </div>
-            <div class="dias-grid">
-              ${dias.map(d => {
-                const fechaCompleta = `${añoResumen}-${String(mesResumen+1).padStart(2,'0')}-${String(d.dia).padStart(2,'0')}`;
-                const claseFinSemana = d.esFinSemana ? 'fin-semana' : '';
-                return `<span class="dia-chip ${claseFinSemana} ${fechaCompleta === fechaActual ? 'hoy' : ''}" title="${getNombreDia(fechaCompleta)}">${d.dia} (${d.horas}h)</span>`;
-              }).join('')}
-            </div>
-          </div>
-        `;
+        const dias = obrasT[obraId].sort((a,b) => a.dia - b.dia);
+        const totalHorasO = dias.reduce((sum, d) => sum + d.horas, 0);
+        html += `<div class="obra-detalle"><div class="obra-detalle-header"><div style="width:10px;height:10px;border-radius:50%;background:${colorObra(obraId)};"></div><span class="obra-detalle-nombre">${obra ? obra.nombre : 'Obra'}</span><span class="obra-detalle-total">${totalHorasO}h · ${dias.length} día${dias.length !== 1 ? 's' : ''}</span></div><div class="dias-grid">${dias.map(d => `<span class="dia-chip ${(d.esFestivoGlobal || d.esFestivoAsignacion) ? 'festivo' : ''}">${d.dia} (${d.horas}h)${(d.esFestivoGlobal || d.esFestivoAsignacion) ? ' 🎉' : ''}</span>`).join('')}</div></div>`;
       });
     }
   });
-  
   html += '</div>';
-  
-  if (trabajadores.filter(t => asignacionesMes.some(a => a.trabajadorId === t.id)).length === 0) {
-    html = '<div class="empty-state">No hay actividad este mes</div>';
-  }
-  
+  if (!trabajadores.some(t => asignacionesMes.some(a => a.trabajadorId === t.id))) html = '<div class="empty-state">No hay actividad este mes</div>';
   document.getElementById('resumen-contenido').innerHTML = html;
 }
 
-function seleccionarTrabajador(id) {
-  trabajadorSeleccionado = trabajadorSeleccionado === id ? null : id;
-  renderResumen();
+function seleccionarTrabajador(id) { trabajadorSeleccionado = trabajadorSeleccionado === id ? null : id; renderResumen(); }
+
+// ==================== FESTIVOS GLOBALES ====================
+function renderFestivos() {
+  const container = document.getElementById('festivos-list');
+  if (!container) return;
+  if (!festivos.length) { container.innerHTML = '<div class="empty-state">No hay días festivos configurados</div>'; return; }
+  const festivosOrdenados = [...festivos].sort((a,b) => a.fecha.localeCompare(b.fecha));
+  container.innerHTML = festivosOrdenados.map(f => `<div class="festivo-item"><div><div class="festivo-fecha">${formatearFecha(f.fecha)}</div><div class="festivo-desc">${f.descripcion || 'Festivo'}</div></div><button class="btn-remove-festivo" onclick="eliminarFestivo('${f.fecha}')">🗑️</button></div>`).join('');
 }
 
-// ── EXPORTAR PARA MANOBRACAN ────────────────────────────────────────────
+function abrirModalFestivo() {
+  document.getElementById('festivo-fecha').value = '';
+  document.getElementById('festivo-desc').value = '';
+  abrirModal('modal-festivo');
+}
+
+function guardarFestivo() {
+  const fecha = document.getElementById('festivo-fecha').value;
+  const descripcion = document.getElementById('festivo-desc').value.trim() || 'Festivo';
+  if (!fecha) { mostrarToast('⚠️ Selecciona una fecha'); return; }
+  if (festivos.some(f => f.fecha === fecha)) { mostrarToast('⚠️ Esta fecha ya está marcada como festiva'); return; }
+  festivos.push({ fecha, descripcion });
+  guardarEnStorage();
+  renderFestivos();
+  renderCalendar();
+  cerrarModal('modal-festivo');
+  mostrarToast('✅ Día festivo añadido');
+}
+
+function eliminarFestivo(fecha) {
+  if (confirm('¿Eliminar este día festivo?')) {
+    festivos = festivos.filter(f => f.fecha !== fecha);
+    guardarEnStorage();
+    renderFestivos();
+    renderCalendar();
+    mostrarToast('🗑️ Festivo eliminado');
+  }
+}
+
+// ==================== BACKUP Y EXPORTACIÓN ====================
+function exportarBackup() {
+  const payload = { _tipo: 'backup_control_trabajadores', _version: '2.0', _fecha: new Date().toISOString(), obras, trabajadores, asignaciones, festivos, siguienteIdTrabajador, siguienteIdObra };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `backup_trabajadores_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  mostrarToast(`✅ Copia guardada`);
+}
+
+function restaurarBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.obras && !parsed.trabajadores) { mostrarToast('❌ No es un backup válido'); return; }
+      if (!confirm(`¿Restaurar copia del ${parsed._fecha ? new Date(parsed._fecha).toLocaleDateString() : 'desconocida'}? Se perderán datos actuales.`)) return;
+      obras = parsed.obras || [];
+      trabajadores = parsed.trabajadores || [];
+      asignaciones = parsed.asignaciones || [];
+      festivos = parsed.festivos || [];
+      siguienteIdTrabajador = parsed.siguienteIdTrabajador || (Math.max(0, ...trabajadores.map(t => t.id)) + 1);
+      siguienteIdObra = parsed.siguienteIdObra || (Math.max(0, ...obras.map(o => o.id)) + 1);
+      guardarEnStorage();
+      renderTodo();
+      mostrarToast(`✅ Restaurado: ${trabajadores.length} trabajadores, ${asignaciones.length} asignaciones`);
+    } catch(err) { mostrarToast('❌ Error al leer: ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+function actualizarEtiquetaBackup() {
+  const lbl = document.getElementById('backup-fecha-lbl');
+  if (!lbl) return;
+  try {
+    const datos = localStorage.getItem(STORAGE_KEY);
+    if (datos) {
+      const parsed = JSON.parse(datos);
+      if (parsed.ultimaModificacion) {
+        const d = new Date(parsed.ultimaModificacion);
+        lbl.textContent = `Último guardado: ${d.toLocaleDateString('es-ES')} ${d.toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'})}`;
+      }
+    }
+  } catch(e) {}
+}
+
+// ==================== IMPORTAR DESDE MANOBRACAN ====================
+function importarDesdeManobracan() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.trabajadores || !data.mes || !data.año) { mostrarToast('❌ No es un JSON de Manobracan válido'); return; }
+        const mesImportado = data.mes.toUpperCase();
+        const añoImportado = data.año;
+        const mesNumero = MESES.findIndex(m => m.toUpperCase() === mesImportado) + 1;
+        let trabajadoresImportados = 0, asignacionesImportadas = 0, obrasImportadas = 0;
+        data.trabajadores.forEach(tJson => {
+          let trabajador = trabajadores.find(t => t.nombre.toLowerCase() === tJson.nombre.toLowerCase() && (t.apellidos || '').toLowerCase() === (tJson.apellidos || '').toLowerCase());
+          if (!trabajador) {
+            trabajador = { id: siguienteIdTrabajador++, nombre: tJson.nombre, apellidos: tJson.apellidos || '' };
+            trabajadores.push(trabajador);
+            trabajadoresImportados++;
+          }
+          const diasPorObra = tJson.dias_por_obra || {};
+          Object.keys(diasPorObra).forEach(nombreObra => {
+            let obra = obras.find(o => o.nombre === nombreObra);
+            if (!obra) {
+              obra = { id: siguienteIdObra++, nombre: nombreObra, direccion: '' };
+              obras.push(obra);
+              obrasImportadas++;
+            }
+            const dias = diasPorObra[nombreObra];
+            dias.forEach(diaObj => {
+              let dia, horas, esFestivo;
+              if (typeof diaObj === 'object' && diaObj !== null) { dia = diaObj.dia; horas = diaObj.horas || 8; esFestivo = diaObj.esFestivo || false; }
+              else { dia = diaObj; horas = 8; esFestivo = false; }
+              const fechaCompleta = `${añoImportado}-${String(mesNumero).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+              const existe = asignaciones.some(a => a.trabajadorId === trabajador.id && a.fecha === fechaCompleta && a.obraId === obra.id);
+              if (!existe) {
+                asignaciones.push({ trabajadorId: trabajador.id, obraId: obra.id, fecha: fechaCompleta, horas: horas, esFestivo: esFestivo });
+                asignacionesImportadas++;
+              }
+            });
+          });
+        });
+        guardarEnStorage();
+        renderTodo();
+        mostrarToast(`✅ Importado: ${trabajadoresImportados} trabajadores, ${obrasImportadas} obras, ${asignacionesImportadas} asignaciones`);
+        const mesIndex = MESES.findIndex(m => m.toUpperCase() === mesImportado);
+        if (mesIndex !== -1) { mesResumen = mesIndex; añoResumen = añoImportado; renderResumen(); showTab('resumen'); }
+      } catch(err) { mostrarToast('❌ Error: ' + err.message); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ==================== EXPORTAR A MANOBRACAN ====================
 function exportarParaManobracan() {
   const año = añoResumen;
   const mes = mesResumen + 1;
   const nombreMes = MESES[mesResumen].toUpperCase();
-
   const diasEnMes = new Date(año, mesResumen + 1, 0).getDate();
   const fechasMes = [];
-  for (let d = 1; d <= diasEnMes; d++) {
-    fechasMes.push(`${año}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
-  }
-
+  for (let d = 1; d <= diasEnMes; d++) fechasMes.push(`${año}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
   const asignacionesMes = asignaciones.filter(a => fechasMes.includes(a.fecha));
-
-  if (asignacionesMes.length === 0) {
-    mostrarToast('⚠️ No hay datos para exportar este mes');
-    return;
-  }
-
+  
+  if (asignacionesMes.length === 0) { mostrarToast('⚠️ No hay datos para exportar'); return; }
+  
+  const festivosSet = new Set(festivos.map(f => f.fecha));
+  
   const resumenTrabajadores = trabajadores.map(t => {
     const asigT = asignacionesMes.filter(a => a.trabajadorId === t.id);
+    if (asigT.length === 0) return null;
     const diasPorObra = {};
     asigT.forEach(a => {
       const obraObj = obras.find(o => o.id === a.obraId);
       const nombreObra = obraObj ? obraObj.nombre : 'Sin obra';
       if (!diasPorObra[nombreObra]) diasPorObra[nombreObra] = [];
-      diasPorObra[nombreObra].push({
-        dia: parseInt(a.fecha.split('-')[2]),
-        horas: a.horas,
-        diaSemana: getNombreDia(a.fecha),
-        esFinSemana: esFinDeSemana(a.fecha)
+      const fecha = new Date(a.fecha);
+      const diaSemana = fecha.getDay();
+      const esFinSemana = (diaSemana === 0 || diaSemana === 6);
+      const esFestivoGlobal = festivosSet.has(a.fecha);
+      const esFestivo = esFestivoGlobal || (a.esFestivo === true);
+      diasPorObra[nombreObra].push({ 
+        dia: parseInt(a.fecha.split('-')[2]), 
+        horas: a.horas, 
+        diaSemana: ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][diaSemana], 
+        esFinSemana, 
+        esFestivo: esFestivo
       });
     });
-    return {
-      id: t.id,
-      nombre: t.nombre,
-      apellidos: t.apellidos,
-      nombre_completo: `${t.nombre} ${t.apellidos}`,
-      total_horas: asigT.reduce((sum, a) => sum + a.horas, 0),
-      total_dias: asigT.length,
-      dias_por_obra: diasPorObra
+    return { 
+      id: t.id, 
+      nombre: t.nombre, 
+      apellidos: t.apellidos, 
+      nombre_completo: `${t.nombre} ${t.apellidos}`, 
+      total_horas: asigT.reduce((s,a)=>s+a.horas,0), 
+      total_dias: asigT.length, 
+      dias_por_obra: diasPorObra 
     };
-  }).filter(t => t.total_dias > 0);
-
-  const exportData = {
-    version: "1.0",
-    generado: new Date().toISOString(),
-    mes: nombreMes,
-    año: año,
-    trabajadores: resumenTrabajadores
-  };
-
+  }).filter(t => t !== null);
+  
+  const exportData = { version: "2.0", generado: new Date().toISOString(), mes: nombreMes, año: año, trabajadores: resumenTrabajadores };
   const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
+  a.href = URL.createObjectURL(blob);
   a.download = `manobracan_${nombreMes}_${año}.json`;
-  document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  mostrarToast(`✅ Exportado: ${resumenTrabajadores.length} trabajadores`);
+  URL.revokeObjectURL(a.href);
+  mostrarToast(`✅ Exportado: ${resumenTrabajadores.length} trabajadores (festivos marcados)`);
 }
 
-// FUNCIÓN PARA ENVIAR POR GMAIL CON INDICACIÓN DE DÍAS LABORALES/FIN DE SEMANA
 function enviarPorGmail() {
   const año = añoResumen;
-  const mes = mesResumen + 1;
   const nombreMes = MESES[mesResumen];
-  
+  const mes = mesResumen + 1;
   const diasEnMes = new Date(año, mesResumen + 1, 0).getDate();
   const fechasMes = [];
-  for (let d = 1; d <= diasEnMes; d++) {
-    fechasMes.push(`${año}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
-  }
-  
+  for (let d = 1; d <= diasEnMes; d++) fechasMes.push(`${año}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
   const asignacionesMes = asignaciones.filter(a => fechasMes.includes(a.fecha));
-  
-  if (asignacionesMes.length === 0) {
-    mostrarToast('⚠️ No hay datos para enviar este mes');
-    return;
-  }
-  
-  let contenido = `RESUMEN DE TRABAJO - ${nombreMes} ${año}\n`;
-  contenido += `================================\n\n`;
-  
-  // Estadísticas generales
-  const totalHoras = asignacionesMes.reduce((sum, a) => sum + a.horas, 0);
-  const totalDias = new Set(asignacionesMes.map(a => a.fecha)).size;
-  
-  // Contar días laborales y fines de semana trabajados
-  const diasPorTipo = { laborales: 0, finesSemana: 0 };
-  const diasUnicos = new Set(asignacionesMes.map(a => a.fecha));
-  diasUnicos.forEach(fecha => {
-    if (esFinDeSemana(fecha)) {
-      diasPorTipo.finesSemana++;
-    } else {
-      diasPorTipo.laborales++;
-    }
-  });
-  
-  contenido += `📊 TOTAL GENERAL\n`;
-  contenido += `   • ${totalHoras} horas trabajadas\n`;
-  contenido += `   • ${totalDias} días trabajados\n`;
-  contenido += `   • ${diasPorTipo.laborales} días laborales (L-V)\n`;
-  contenido += `   • ${diasPorTipo.finesSemana} fines de semana (S-D)\n\n`;
-  
-  contenido += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-  
-  // Detalle por trabajador
+  if (asignacionesMes.length === 0) { mostrarToast('⚠️ No hay datos'); return; }
+  let contenido = `RESUMEN DE TRABAJO - ${nombreMes} ${año}\n================================\n\n`;
+  const totalHoras = asignacionesMes.reduce((s,a)=>s+a.horas,0);
+  const totalDias = new Set(asignacionesMes.map(a=>a.fecha)).size;
+  contenido += `📊 TOTAL: ${totalHoras} horas en ${totalDias} días\n\n`;
+  const festivosSet = new Set(festivos.map(f => f.fecha));
   trabajadores.forEach(t => {
-    const asigTrabajador = asignacionesMes.filter(a => a.trabajadorId === t.id);
-    if (asigTrabajador.length === 0) return;
-    
-    const totalHorasTrab = asigTrabajador.reduce((sum, a) => sum + a.horas, 0);
-    const diasTrabajador = new Set(asigTrabajador.map(a => a.fecha));
-    const laboralesTrab = [...diasTrabajador].filter(f => !esFinDeSemana(f)).length;
-    const finesTrab = [...diasTrabajador].filter(f => esFinDeSemana(f)).length;
-    
-    contenido += `👷 ${t.nombre} ${t.apellidos}\n`;
-    contenido += `   Total: ${totalHorasTrab}h · ${diasTrabajador.size} días\n`;
-    contenido += `   📅 Laborales: ${laboralesTrab} días | 🌙 Fin semana: ${finesTrab} días\n`;
-    
-    const obrasTrabajador = {};
-    asigTrabajador.forEach(a => {
-      if (!obrasTrabajador[a.obraId]) obrasTrabajador[a.obraId] = [];
-      obrasTrabajador[a.obraId].push({
-        dia: parseInt(a.fecha.split('-')[2]),
-        horas: a.horas,
-        diaSemana: getNombreDia(a.fecha),
-        esFinSemana: esFinDeSemana(a.fecha)
-      });
-    });
-    
-    Object.keys(obrasTrabajador).forEach(obraId => {
+    const asigT = asignacionesMes.filter(a => a.trabajadorId === t.id);
+    if (asigT.length === 0) return;
+    const totalHorasT = asigT.reduce((s,a)=>s+a.horas,0);
+    const diasT = new Set(asigT.map(a=>a.fecha)).size;
+    contenido += `👷 ${t.nombre} ${t.apellidos} (${totalHorasT}h · ${diasT} días)\n`;
+    const obrasT = {};
+    asigT.forEach(a => { if (!obrasT[a.obraId]) obrasT[a.obraId] = []; obrasT[a.obraId].push({ dia: parseInt(a.fecha.split('-')[2]), horas: a.horas, esFestivo: a.esFestivo || festivosSet.has(a.fecha) }); });
+    Object.keys(obrasT).forEach(obraId => {
       const obra = obras.find(o => o.id == obraId);
-      const registros = obrasTrabajador[obraId].sort((a,b) => a.dia - b.dia);
-      const totalHorasObra = registros.reduce((sum, r) => sum + r.horas, 0);
-      contenido += `   • ${obra ? obra.nombre : 'Obra'}: ${totalHorasObra}h\n`;
-      registros.forEach(r => {
-        const tipoDia = r.esFinSemana ? '🌙 FIN DE SEMANA' : '📅 LABORAL';
-        contenido += `     - Día ${r.dia} (${r.diaSemana} - ${tipoDia}): ${r.horas}h\n`;
-      });
+      const registros = obrasT[obraId].sort((a,b)=>a.dia-b.dia);
+      const totalHorasO = registros.reduce((s,r)=>s+r.horas,0);
+      contenido += `  • ${obra ? obra.nombre : 'Obra'}: ${totalHorasO}h (días: ${registros.map(r => `${r.dia}(${r.horas}h)${r.esFestivo ? '🎉' : ''}`).join(', ')})\n`;
     });
     contenido += '\n';
   });
-  
-  // Resumen por obra con indicación de días
-  contenido += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-  contenido += `📋 RESUMEN POR OBRA\n`;
-  contenido += `================================\n\n`;
-  
-  obras.forEach(o => {
-    const asigObra = asignacionesMes.filter(a => a.obraId === o.id);
-    if (asigObra.length === 0) return;
-    
-    const trabajadoresUnicos = new Set(asigObra.map(a => a.trabajadorId)).size;
-    const diasObra = new Set(asigObra.map(a => a.fecha));
-    const totalHorasObra = asigObra.reduce((sum, a) => sum + a.horas, 0);
-    const laboralesObra = [...diasObra].filter(f => !esFinDeSemana(f)).length;
-    const finesObra = [...diasObra].filter(f => esFinDeSemana(f)).length;
-    
-    contenido += `🏗️ ${o.nombre}\n`;
-    contenido += `   • ${totalHorasObra} horas totales\n`;
-    contenido += `   • ${asigObra.length} asignaciones\n`;
-    contenido += `   • ${trabajadoresUnicos} trabajadores diferentes\n`;
-    contenido += `   • ${diasObra.size} días trabajados (${laboralesObra} laborales, ${finesObra} fin de semana)\n\n`;
-  });
-  
-  const asunto = encodeURIComponent(`Resumen de trabajo ${nombreMes} ${año} - Laborales y Fines de Semana`);
-  const cuerpo = encodeURIComponent(contenido);
-  
-  window.location.href = `mailto:?subject=${asunto}&body=${cuerpo}`;
-  
-  mostrarToast('📧 Abriendo cliente de email...');
+  window.location.href = `mailto:?subject=${encodeURIComponent(`Resumen de trabajo - ${nombreMes} ${año}`)}&body=${encodeURIComponent(contenido)}`;
+  mostrarToast('📧 Abriendo email...');
 }
 
-// Modales
-function abrirModal(id) {
-  document.getElementById(id).classList.add('open');
-}
+// ==================== MODALES ====================
+function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(el => { el.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); }); });
 
-function cerrarModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
-
-// Cerrar modales al hacer clic fuera
-document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', function(e) {
-    if (e.target === this) this.classList.remove('open');
-  });
-});
-
-// Render todo
+// ==================== RENDER TODO ====================
 function renderTodo() {
   document.getElementById('today-lbl').textContent = '📅 Hoy: ' + formatearFecha(fechaActual);
   document.getElementById('app-sub').textContent = trabajadores.length + ' trabajadores · ' + obras.length + ' obras';
-  
   renderTrabajadores();
   llenarSelectObras(document.getElementById('obra-filter').value);
   llenarSelectTrabajadores();
   renderObras();
   renderCalendar();
-  if (document.getElementById('tab-resumen').classList.contains('active')) {
-    renderResumen();
-  }
+  if (document.getElementById('tab-resumen').classList.contains('active')) renderResumen();
+  if (document.getElementById('tab-gestion').classList.contains('active')) renderFestivos();
+  actualizarEtiquetaBackup();
 }
 
-// Inicio
+cargarStorage();
 renderTodo();
 
-// Registrar Service Worker
+setTimeout(() => document.getElementById('splash').classList.add('hide'), 800);
+if (!localStorage.getItem('guia_instalacion_cerrada') && !window.matchMedia('(display-mode: standalone)').matches) {
+  document.getElementById('installGuide').style.display = 'block';
+}
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js').then(function(registration) {
-      console.log('ServiceWorker registrado');
-    }, function(err) {
-      console.log('ServiceWorker error: ', err);
-    });
-  });
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err)); });
 }
 </script>
 </body>
