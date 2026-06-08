@@ -390,10 +390,10 @@ let mesResumen = new Date().getMonth();
 let trabajadorSeleccionado = null;
 let editandoTrabajadorId = null;
 let editandoObraId = null;
-let editandoAsignacion = null; // guarda la asignación original que se está editando
+let editandoAsignacion = null;
 
-// ==================== STORAGE ====================
-const STORAGE_KEY = 'app_obras_v5'; // cambio de versión por nueva estructura
+// ==================== STORAGE (con migración desde versión anterior) ====================
+const STORAGE_KEY = 'app_obras_v5';
 
 function guardarEnStorage() {
   const payload = { obras, trabajadores, asignaciones, festivos, siguienteIdTrabajador, siguienteIdObra, ultimaModificacion: new Date().toISOString() };
@@ -402,44 +402,64 @@ function guardarEnStorage() {
 }
 
 function cargarStorage() {
-  try {
-    const datos = localStorage.getItem(STORAGE_KEY);
-    if (datos) {
+  let datos = localStorage.getItem(STORAGE_KEY);
+  
+  if (!datos) {
+    const datosV4 = localStorage.getItem('app_obras_v4');
+    if (datosV4) {
+      try {
+        const parsedV4 = JSON.parse(datosV4);
+        if (parsedV4.asignaciones) {
+          parsedV4.asignaciones = parsedV4.asignaciones.map(a => ({ ...a, esFestivo: a.esFestivo || false }));
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedV4));
+        datos = localStorage.getItem(STORAGE_KEY);
+        console.log('Datos migrados desde versión anterior (v4)');
+        mostrarToast('Datos migrados automáticamente desde versión anterior');
+      } catch(e) { console.error('Error al migrar:', e); }
+    }
+  }
+  
+  if (datos) {
+    try {
       const parsed = JSON.parse(datos);
       obras = parsed.obras || [];
       trabajadores = parsed.trabajadores || [];
       asignaciones = parsed.asignaciones || [];
       festivos = parsed.festivos || [];
-      siguienteIdTrabajador = parsed.siguienteIdTrabajador || 1;
-      siguienteIdObra = parsed.siguienteIdObra || 1;
-    }
-  } catch(e) { console.error(e); }
-  
-  if (obras.length === 0) {
-    obras = [
-      {id: siguienteIdObra++, nombre: 'Edificio Centro', direccion: 'C/ Mayor 10'},
-      {id: siguienteIdObra++, nombre: 'Nave Industrial', direccion: 'Pol. Norte'},
-      {id: siguienteIdObra++, nombre: 'Viviendas Sur', direccion: 'Av. Andalucía 45'}
-    ];
-    trabajadores = [
-      {id: siguienteIdTrabajador++, nombre: 'Carlos', apellidos: 'García'},
-      {id: siguienteIdTrabajador++, nombre: 'María', apellidos: 'Martínez'},
-      {id: siguienteIdTrabajador++, nombre: 'José', apellidos: 'Fernández'}
-    ];
-    festivos = [
-      {fecha: '2026-01-01', descripcion: 'Año Nuevo'},
-      {fecha: '2026-01-06', descripcion: 'Reyes Magos'},
-      {fecha: '2026-04-03', descripcion: 'Viernes Santo'},
-      {fecha: '2026-05-01', descripcion: 'Día del Trabajador'},
-      {fecha: '2026-08-15', descripcion: 'Asunción'},
-      {fecha: '2026-10-12', descripcion: 'Fiesta Nacional'},
-      {fecha: '2026-11-01', descripcion: 'Todos los Santos'},
-      {fecha: '2026-12-06', descripcion: 'Día de la Constitución'},
-      {fecha: '2026-12-08', descripcion: 'Inmaculada Concepción'},
-      {fecha: '2026-12-25', descripcion: 'Navidad'}
-    ];
-    guardarEnStorage();
+      siguienteIdTrabajador = parsed.siguienteIdTrabajador || (Math.max(0, ...trabajadores.map(t => t.id), 0) + 1);
+      siguienteIdObra = parsed.siguienteIdObra || (Math.max(0, ...obras.map(o => o.id), 0) + 1);
+      return;
+    } catch(e) { console.error('Error al parsear storage:', e); }
   }
+  
+  cargarDatosEjemplo();
+}
+
+function cargarDatosEjemplo() {
+  obras = [
+    {id: siguienteIdObra++, nombre: 'Edificio Centro', direccion: 'C/ Mayor 10'},
+    {id: siguienteIdObra++, nombre: 'Nave Industrial', direccion: 'Pol. Norte'},
+    {id: siguienteIdObra++, nombre: 'Viviendas Sur', direccion: 'Av. Andalucía 45'}
+  ];
+  trabajadores = [
+    {id: siguienteIdTrabajador++, nombre: 'Carlos', apellidos: 'García'},
+    {id: siguienteIdTrabajador++, nombre: 'María', apellidos: 'Martínez'},
+    {id: siguienteIdTrabajador++, nombre: 'José', apellidos: 'Fernández'}
+  ];
+  festivos = [
+    {fecha: '2026-01-01', descripcion: 'Año Nuevo'},
+    {fecha: '2026-01-06', descripcion: 'Reyes Magos'},
+    {fecha: '2026-04-03', descripcion: 'Viernes Santo'},
+    {fecha: '2026-05-01', descripcion: 'Día del Trabajador'},
+    {fecha: '2026-08-15', descripcion: 'Asunción'},
+    {fecha: '2026-10-12', descripcion: 'Fiesta Nacional'},
+    {fecha: '2026-11-01', descripcion: 'Todos los Santos'},
+    {fecha: '2026-12-06', descripcion: 'Día de la Constitución'},
+    {fecha: '2026-12-08', descripcion: 'Inmaculada Concepción'},
+    {fecha: '2026-12-25', descripcion: 'Navidad'}
+  ];
+  guardarEnStorage();
 }
 
 cargarStorage();
@@ -468,14 +488,10 @@ function colorObra(id) {
   return COLORES[i % COLORES.length];
 }
 
-// Obtiene todas las asignaciones de un trabajador en una fecha
 function getAsignaciones(trabajadorId, fecha) {
   return asignaciones.filter(a => a.trabajadorId === trabajadorId && a.fecha === fecha);
 }
 
-// Asigna o actualiza una asignación específica (trabajador, fecha, obra)
-// Si ya existe exactamente esa combinación, actualiza horas y festivo.
-// Si no existe, la añade sin eliminar otras.
 function setAsignacion(trabajadorId, obraId, fecha, horas, esFestivo = false) {
   const idx = asignaciones.findIndex(a => a.trabajadorId === trabajadorId && a.fecha === fecha && a.obraId === obraId);
   if (idx !== -1) {
@@ -486,7 +502,6 @@ function setAsignacion(trabajadorId, obraId, fecha, horas, esFestivo = false) {
   guardarEnStorage();
 }
 
-// Elimina una asignación concreta
 function eliminarAsignacionExacta(trabajadorId, fecha, obraId) {
   asignaciones = asignaciones.filter(a => !(a.trabajadorId === trabajadorId && a.fecha === fecha && a.obraId === obraId));
   guardarEnStorage();
@@ -508,11 +523,43 @@ function showTab(tab) {
   document.getElementById('fab').style.display = (tab === 'gestion' || tab === 'resumen') ? 'none' : 'flex';
   if (tab === 'obras') {
     llenarSelectTrabajadores();
-    document.getElementById('asignacion-fecha').value = fechaActual;
-    document.getElementById('asignacion-horas').value = 8;
+    // Sincronizar el input fecha con la fecha seleccionada actualmente (fechaSeleccionada)
+    const fechaInput = document.getElementById('asignacion-fecha');
+    if (fechaInput) fechaInput.value = fechaSeleccionada;
+    // Asegurar que el calendario muestre el mes de la fecha seleccionada
+    if (fechaSeleccionada) {
+      const [year, month] = fechaSeleccionada.split('-');
+      añoCalendario = parseInt(year);
+      mesCalendario = parseInt(month) - 1;
+    }
+    renderCalendar();
   }
   if (tab === 'resumen') renderResumen();
   if (tab === 'gestion') renderFestivos();
+}
+
+// ==================== Sincronización fecha <-> calendario ====================
+function sincronizarCalendarioDesdeFecha(fecha) {
+  if (!fecha) return;
+  const [year, month] = fecha.split('-');
+  const nuevoAño = parseInt(year);
+  const nuevoMes = parseInt(month) - 1;
+  if (añoCalendario !== nuevoAño || mesCalendario !== nuevoMes) {
+    añoCalendario = nuevoAño;
+    mesCalendario = nuevoMes;
+    renderCalendar();
+  } else {
+    // Si ya está en el mismo mes, solo actualizar la selección del día
+    fechaSeleccionada = fecha;
+    renderCalendar(); // esto refresca la clase 'selected'
+  }
+}
+
+function actualizarInputFechaDesdeCalendario(fecha) {
+  const inputFecha = document.getElementById('asignacion-fecha');
+  if (inputFecha && inputFecha.value !== fecha) {
+    inputFecha.value = fecha;
+  }
 }
 
 // ==================== TRABAJADORES ====================
@@ -535,7 +582,6 @@ function renderTrabajadores() {
         <button class="btn-icon" onclick="eliminarTrabajador(${t.id})">🗑️</button>
       </div>`;
     }
-    // Mostrar todas las asignaciones del día
     const badges = asignsHoy.map(asig => {
       const obra = obras.find(o => o.id === asig.obraId);
       const horas = asig.horas;
@@ -676,6 +722,7 @@ function asignarTrabajadorAObra() {
   if (!fecha) { mostrarToast('⚠️ Selecciona una fecha'); return; }
   if (horas <= 0) { mostrarToast('⚠️ Horas > 0'); return; }
   setAsignacion(trabajadorId, obraId, fecha, horas, false);
+  // Después de asignar, refrescar el calendario y el panel para mostrar el nuevo día
   renderCalendar();
   mostrarToast(`✅ Asignado: ${trabajadores.find(t => t.id === trabajadorId).nombre} - ${horas}h en ${nombreObra(obraId)}`);
   document.getElementById('trabajador-select').value = '';
@@ -720,7 +767,26 @@ function renderCalendar() {
   renderPanelDia(filtroId);
 }
 
-function seleccionarDia(fecha) { fechaSeleccionada = fecha; renderCalendar(); }
+function seleccionarDia(fecha) {
+  fechaSeleccionada = fecha;
+  // Actualizar el input de fecha
+  actualizarInputFechaDesdeCalendario(fecha);
+  renderCalendar();
+}
+
+// ==================== EVENTO PARA CAMBIO MANUAL DE FECHA ====================
+document.addEventListener('DOMContentLoaded', () => {
+  const fechaInput = document.getElementById('asignacion-fecha');
+  if (fechaInput) {
+    fechaInput.addEventListener('change', (e) => {
+      const nuevaFecha = e.target.value;
+      if (nuevaFecha) {
+        fechaSeleccionada = nuevaFecha;
+        sincronizarCalendarioDesdeFecha(nuevaFecha);
+      }
+    });
+  }
+});
 
 function renderPanelDia(filtroId) {
   document.getElementById('dw-title').textContent = '📋 ' + formatearFecha(fechaSeleccionada);
@@ -744,7 +810,7 @@ function renderPanelDia(filtroId) {
 function abrirEditarAsignacion(fecha, trabajadorId, obraId) {
   const asignacion = asignaciones.find(a => a.fecha === fecha && a.trabajadorId === trabajadorId && a.obraId === obraId);
   if (!asignacion) return;
-  editandoAsignacion = { ...asignacion }; // copia original
+  editandoAsignacion = { ...asignacion };
   document.getElementById('edit-fecha').value = fecha;
   document.getElementById('edit-horas').value = asignacion.horas;
   const festivosSet = new Set(festivos.map(f => f.fecha));
@@ -767,13 +833,10 @@ function guardarEdicionAsignacion() {
   const festivosSet = new Set(festivos.map(f => f.fecha));
   if (festivosSet.has(nuevaFecha)) esFestivo = true;
   
-  // Si la obra o el trabajador cambian, añadimos nueva asignación sin eliminar la original
   if (nuevoTrabajadorId !== editandoAsignacion.trabajadorId || nuevaObraId !== editandoAsignacion.obraId) {
-    // Crear nueva asignación
     setAsignacion(nuevoTrabajadorId, nuevaObraId, nuevaFecha, nuevasHoras, esFestivo);
     mostrarToast('✅ Nueva asignación creada (se mantuvo la anterior)');
   } else {
-    // Mismo trabajador y misma obra: actualizar horas y festivo
     const idx = asignaciones.findIndex(a => a.trabajadorId === editandoAsignacion.trabajadorId && a.fecha === editandoAsignacion.fecha && a.obraId === editandoAsignacion.obraId);
     if (idx !== -1) {
       asignaciones[idx] = { ...asignaciones[idx], horas: nuevasHoras, esFestivo };
@@ -1104,8 +1167,11 @@ function renderTodo() {
   actualizarEtiquetaBackup();
 }
 
-cargarStorage();
+// Inicialización
 renderTodo();
+// Sincronizar el input fecha con la fecha seleccionada al cargar
+const inicialFechaInput = document.getElementById('asignacion-fecha');
+if (inicialFechaInput) inicialFechaInput.value = fechaSeleccionada;
 
 setTimeout(() => document.getElementById('splash').classList.add('hide'), 800);
 if (!localStorage.getItem('guia_instalacion_cerrada') && !window.matchMedia('(display-mode: standalone)').matches) {
