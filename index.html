@@ -436,6 +436,8 @@ let editandoAsignacion = null;
 const STORAGE_KEY = 'app_obras_v6';
 
 function guardarEnStorage() {
+  // Limpiar ausencias huérfanas (de trabajadores ya eliminados)
+  ausencias = ausencias.filter(a => trabajadores.some(t => t.id === a.trabajadorId));
   const payload = { obras, trabajadores, asignaciones, festivos, ausencias, siguienteIdTrabajador, siguienteIdObra, ultimaModificacion: new Date().toISOString() };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   actualizarEtiquetaBackup();
@@ -480,7 +482,7 @@ function cargarStorage() {
       trabajadores = parsed.trabajadores || [];
       asignaciones = parsed.asignaciones || [];
       festivos = parsed.festivos || [];
-      ausencias = parsed.ausencias || [];
+      ausencias = (parsed.ausencias || []).filter(a => (parsed.trabajadores || []).some(t => t.id === a.trabajadorId));
       siguienteIdTrabajador = parsed.siguienteIdTrabajador || (Math.max(0, ...trabajadores.map(t => t.id), 0) + 1);
       siguienteIdObra = parsed.siguienteIdObra || (Math.max(0, ...obras.map(o => o.id), 0) + 1);
       return;
@@ -694,6 +696,7 @@ function eliminarTrabajador(id) {
   if (confirm('¿Eliminar trabajador?')) {
     trabajadores = trabajadores.filter(t => t.id !== id);
     asignaciones = asignaciones.filter(a => a.trabajadorId !== id);
+    ausencias = ausencias.filter(a => a.trabajadorId !== id);
     guardarEnStorage();
     renderTodo();
     mostrarToast('🗑️ Eliminado');
@@ -747,7 +750,12 @@ function guardarObra() {
 }
 
 function eliminarObra(id) {
-  if (confirm('¿Eliminar obra? Los trabajadores asignados quedarán sin obra.')) {
+  const o = obras.find(o => o.id === id);
+  const asigCount = asignaciones.filter(a => a.obraId === id).length;
+  const msg = asigCount > 0
+    ? `¿Eliminar "${o ? o.nombre : 'obra'}"? Se borrarán también sus ${asigCount} asignaciones.`
+    : `¿Eliminar "${o ? o.nombre : 'obra'}"?`;
+  if (confirm(msg)) {
     obras = obras.filter(o => o.id !== id);
     asignaciones = asignaciones.filter(a => a.obraId !== id);
     guardarEnStorage();
@@ -1313,33 +1321,98 @@ function enviarPorGmail() {
   const nombreMes = MESES[mesResumen];
   const mes = mesResumen + 1;
   const diasEnMes = new Date(año, mesResumen + 1, 0).getDate();
+  const DIAS_SEMANA = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const fechasMes = [];
   for (let d = 1; d <= diasEnMes; d++) fechasMes.push(`${año}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+
   const asignacionesMes = asignaciones.filter(a => fechasMes.includes(a.fecha));
-  if (asignacionesMes.length === 0) { mostrarToast('⚠️ No hay datos'); return; }
-  let contenido = `RESUMEN DE TRABAJO - ${nombreMes} ${año}\n================================\n\n`;
-  const totalHoras = asignacionesMes.reduce((s,a)=>s+a.horas,0);
-  const totalDias = new Set(asignacionesMes.map(a=>a.fecha)).size;
-  contenido += `📊 TOTAL: ${totalHoras} horas en ${totalDias} días\n\n`;
+  const ausenciasMes = ausencias.filter(a => fechasMes.includes(a.fecha));
+  if (asignacionesMes.length === 0 && ausenciasMes.length === 0) { mostrarToast('⚠️ No hay datos'); return; }
+
   const festivosSet = new Set(festivos.map(f => f.fecha));
+
+  // Calcular días laborales y fines de semana del mes con datos
+  const diasConDatos = new Set(asignacionesMes.map(a => a.fecha));
+  let diasLaborales = 0, diasFinSemana = 0;
+  diasConDatos.forEach(f => {
+    const ds = new Date(f).getDay();
+    if (ds === 0 || ds === 6) diasFinSemana++; else diasLaborales++;
+  });
+  const totalHoras = asignacionesMes.reduce((s,a) => s+a.horas, 0);
+
+  let contenido = `RESUMEN DE TRABAJO - ${nombreMes} ${año}\n================================\n\n`;
+  contenido += `📊 TOTAL GENERAL\n`;
+  contenido += `  • ${totalHoras} horas trabajadas\n`;
+  contenido += `  • ${diasConDatos.size} días trabajados\n`;
+  contenido += `  • ${diasLaborales} días laborales (L-V)\n`;
+  contenido += `  • ${diasFinSemana} fines de semana (S-D)\n`;
+  if (ausenciasMes.length > 0) contenido += `  • ${ausenciasMes.length} ausencias registradas\n`;
+  contenido += '\n________________________________\n\n';
+
+  // --- Detalle por trabajador ---
   trabajadores.forEach(t => {
     const asigT = asignacionesMes.filter(a => a.trabajadorId === t.id);
-    const ausT = ausencias.filter(a => a.trabajadorId === t.id && fechasMes.includes(a.fecha));
+    const ausT = ausenciasMes.filter(a => a.trabajadorId === t.id);
     if (asigT.length === 0 && ausT.length === 0) return;
-    const totalHorasT = asigT.reduce((s,a)=>s+a.horas,0);
-    const diasT = new Set(asigT.map(a=>a.fecha)).size;
-    contenido += `👷 ${t.nombre} ${t.apellidos} (${totalHorasT}h · ${diasT} días trabajados)\n`;
-    if (ausT.length > 0) contenido += `   🚫 Ausencias: ${ausT.map(a => parseInt(a.fecha.split('-')[2]) + (a.motivo ? ' ('+a.motivo+')' : '')).join(', ')}\n`;
+
+    const totalHorasT = asigT.reduce((s,a) => s+a.horas, 0);
+    const diasT = new Set(asigT.map(a => a.fecha)).size;
+    let labT = 0, fdsT = 0;
+    asigT.forEach(a => { const ds = new Date(a.fecha).getDay(); if (ds===0||ds===6) fdsT++; else labT++; });
+
+    contenido += `👷 ${t.nombre} ${t.apellidos}\n`;
+    contenido += `  Total: ${totalHorasT}h · ${diasT} días\n`;
+    contenido += `  🏗️ Laborales: ${labT} días | 🌙 Fin semana: ${fdsT} días\n`;
+
+    // Por obra
     const obrasT = {};
-    asigT.forEach(a => { if (!obrasT[a.obraId]) obrasT[a.obraId] = []; obrasT[a.obraId].push({ dia: parseInt(a.fecha.split('-')[2]), horas: a.horas, esFestivo: a.esFestivo || festivosSet.has(a.fecha) }); });
+    asigT.forEach(a => {
+      if (!obrasT[a.obraId]) obrasT[a.obraId] = [];
+      obrasT[a.obraId].push({ fecha: a.fecha, dia: parseInt(a.fecha.split('-')[2]), horas: a.horas, esFestivo: a.esFestivo || festivosSet.has(a.fecha) });
+    });
     Object.keys(obrasT).forEach(obraId => {
       const obra = obras.find(o => o.id == obraId);
-      const registros = obrasT[obraId].sort((a,b)=>a.dia-b.dia);
-      const totalHorasO = registros.reduce((s,r)=>s+r.horas,0);
-      contenido += `  • ${obra ? obra.nombre : 'Obra'}: ${totalHorasO}h (días: ${registros.map(r => `${r.dia}(${r.horas}h)${r.esFestivo ? '🎉' : ''}`).join(', ')})\n`;
+      const registros = obrasT[obraId].sort((a,b) => a.dia-b.dia);
+      const totalHorasO = registros.reduce((s,r) => s+r.horas, 0);
+      contenido += `  • ${obra ? obra.nombre : 'Obra'}: ${totalHorasO}h\n`;
+      registros.forEach(r => {
+        const ds = new Date(r.fecha).getDay();
+        const esFinSem = ds===0||ds===6;
+        const tipo = r.esFestivo ? '🎉 FESTIVO' : (esFinSem ? '🌙 FIN SEMANA' : '🏗️ LABORAL');
+        contenido += `    - Día ${r.dia} (${DIAS_SEMANA[ds]} - ${tipo}): ${r.horas}h\n`;
+      });
     });
+
+    // Ausencias
+    if (ausT.length > 0) {
+      contenido += `  🚫 Ausencias (${ausT.length} día${ausT.length!==1?'s':''}):\n`;
+      ausT.sort((a,b) => a.fecha.localeCompare(b.fecha)).forEach(a => {
+        const ds = new Date(a.fecha).getDay();
+        contenido += `    - Día ${parseInt(a.fecha.split('-')[2])} (${DIAS_SEMANA[ds]})${a.motivo ? ': ' + a.motivo : ''}\n`;
+      });
+    }
+
     contenido += '\n';
   });
+
+  // --- Resumen por obra ---
+  contenido += `________________________________\n\n`;
+  contenido += `🏢 RESUMEN POR OBRA\n================================\n\n`;
+  obras.forEach(o => {
+    const asigO = asignacionesMes.filter(a => a.obraId === o.id);
+    if (asigO.length === 0) return;
+    const totalHorasO = asigO.reduce((s,a) => s+a.horas, 0);
+    const trabDif = new Set(asigO.map(a => a.trabajadorId)).size;
+    const diasO = new Set(asigO.map(a => a.fecha));
+    let labO = 0, fdsO = 0;
+    diasO.forEach(f => { const ds = new Date(f).getDay(); if (ds===0||ds===6) fdsO++; else labO++; });
+    contenido += `🏗️ ${o.nombre}\n`;
+    contenido += `  • ${totalHorasO} horas totales\n`;
+    contenido += `  • ${asigO.length} asignaciones\n`;
+    contenido += `  • ${trabDif} trabajadores diferentes\n`;
+    contenido += `  • ${diasO.size} días trabajados (${labO} laborales, ${fdsO} fin de semana)\n\n`;
+  });
+
   window.location.href = `mailto:?subject=${encodeURIComponent(`Resumen de trabajo - ${nombreMes} ${año}`)}&body=${encodeURIComponent(contenido)}`;
   mostrarToast('📧 Abriendo email...');
 }
