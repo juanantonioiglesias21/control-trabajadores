@@ -169,6 +169,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
 .festivo-fecha{font-weight:600;color:#6A1B9A;}
 .festivo-desc{font-size:12px;color:#78909C;}
 .btn-remove-festivo{background:none;border:none;color:#C62828;font-size:18px;cursor:pointer;padding:0 8px;}
+
+/* Ausencias/Faltas */
+.ausencia-badge{background:#FFEBEE;color:#C62828;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-left:6px;}
+.ausente-badge{background:#FFEBEE;color:#C62828;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;display:inline-block;margin:2px 4px 2px 0;}
+.cal-day.has-aus::before{content:'';position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:#C62828;}
+.ausencias-panel{background:#FFEBEE;border-top:2px solid #EF9A9A;}
+.ausencias-panel-hdr{background:#C62828;color:#fff;padding:9px 14px;font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+.ausencia-item{display:flex;align-items:center;padding:10px 13px;border-bottom:1px solid #FFCDD2;gap:10px;}
+.ausencia-item:last-child{border-bottom:none;}
+.ausencia-motivo{font-size:12px;color:#C62828;margin-top:2px;}
+.btn-add-falta{background:linear-gradient(135deg,#C62828,#D32F2F);color:#fff;border:none;padding:9px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:7px;}
+.resumen-ausencias{background:#FFEBEE;border-radius:8px;padding:10px 12px;margin:6px 14px 10px 60px;}
+.resumen-ausencias-titulo{font-size:11px;font-weight:800;color:#C62828;margin-bottom:6px;text-transform:uppercase;}
+.ausencia-chip{background:#FFCDD2;color:#B71C1C;padding:4px 9px;border-radius:12px;font-size:12px;font-weight:600;display:inline-block;margin:2px;}
+.falta-indicator{width:36px;height:36px;border-radius:50%;background:#FFEBEE;border:2px solid #C62828;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -367,6 +382,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
   </div>
 </div>
 
+<!-- Modal Registrar Ausencia -->
+<div class="modal-overlay" id="modal-ausencia">
+  <div class="modal">
+    <h2>🚫 Registrar Ausencia</h2>
+    <div class="fg"><label>Fecha</label><input type="date" id="aus-fecha"></div>
+    <div class="fg"><label>Trabajador</label><select id="aus-trabajador"></select></div>
+    <div class="fg"><label>Motivo (opcional)</label>
+      <select id="aus-motivo-select" onchange="actualizarMotivoAus()">
+        <option value="">— Selecciona o escribe —</option>
+        <option value="Enfermedad">🤒 Enfermedad</option>
+        <option value="Baja médica">🏥 Baja médica</option>
+        <option value="Asunto personal">👤 Asunto personal</option>
+        <option value="Falta injustificada">❌ Falta injustificada</option>
+        <option value="otro">✏️ Otro motivo...</option>
+      </select>
+    </div>
+    <div class="fg" id="aus-motivo-otro-wrap" style="display:none;"><label>Especificar motivo</label><input id="aus-motivo-otro" placeholder="Escribe el motivo..."></div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="cerrarModal('modal-ausencia')">Cancelar</button>
+      <button class="btn btn-danger" onclick="guardarAusencia()">Registrar Falta</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -378,6 +417,7 @@ let obras = [];
 let trabajadores = [];
 let asignaciones = [];
 let festivos = [];
+let ausencias = [];
 
 let siguienteIdTrabajador = 1;
 let siguienteIdObra = 1;
@@ -393,10 +433,10 @@ let editandoObraId = null;
 let editandoAsignacion = null;
 
 // ==================== STORAGE (con migración desde versión anterior) ====================
-const STORAGE_KEY = 'app_obras_v5';
+const STORAGE_KEY = 'app_obras_v6';
 
 function guardarEnStorage() {
-  const payload = { obras, trabajadores, asignaciones, festivos, siguienteIdTrabajador, siguienteIdObra, ultimaModificacion: new Date().toISOString() };
+  const payload = { obras, trabajadores, asignaciones, festivos, ausencias, siguienteIdTrabajador, siguienteIdObra, ultimaModificacion: new Date().toISOString() };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   actualizarEtiquetaBackup();
 }
@@ -405,18 +445,31 @@ function cargarStorage() {
   let datos = localStorage.getItem(STORAGE_KEY);
   
   if (!datos) {
-    const datosV4 = localStorage.getItem('app_obras_v4');
-    if (datosV4) {
+    // Intentar migrar desde v5
+    const datosV5 = localStorage.getItem('app_obras_v5');
+    if (datosV5) {
       try {
-        const parsedV4 = JSON.parse(datosV4);
-        if (parsedV4.asignaciones) {
-          parsedV4.asignaciones = parsedV4.asignaciones.map(a => ({ ...a, esFestivo: a.esFestivo || false }));
-        }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedV4));
+        const parsedV5 = JSON.parse(datosV5);
+        parsedV5.ausencias = parsedV5.ausencias || [];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedV5));
         datos = localStorage.getItem(STORAGE_KEY);
-        console.log('Datos migrados desde versión anterior (v4)');
-        mostrarToast('Datos migrados automáticamente desde versión anterior');
+        mostrarToast('Datos migrados automáticamente');
       } catch(e) { console.error('Error al migrar:', e); }
+    }
+    if (!datos) {
+      const datosV4 = localStorage.getItem('app_obras_v4');
+      if (datosV4) {
+        try {
+          const parsedV4 = JSON.parse(datosV4);
+          if (parsedV4.asignaciones) {
+            parsedV4.asignaciones = parsedV4.asignaciones.map(a => ({ ...a, esFestivo: a.esFestivo || false }));
+          }
+          parsedV4.ausencias = [];
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedV4));
+          datos = localStorage.getItem(STORAGE_KEY);
+          mostrarToast('Datos migrados automáticamente desde versión anterior');
+        } catch(e) { console.error('Error al migrar:', e); }
+      }
     }
   }
   
@@ -427,6 +480,7 @@ function cargarStorage() {
       trabajadores = parsed.trabajadores || [];
       asignaciones = parsed.asignaciones || [];
       festivos = parsed.festivos || [];
+      ausencias = parsed.ausencias || [];
       siguienteIdTrabajador = parsed.siguienteIdTrabajador || (Math.max(0, ...trabajadores.map(t => t.id), 0) + 1);
       siguienteIdObra = parsed.siguienteIdObra || (Math.max(0, ...obras.map(o => o.id), 0) + 1);
       return;
@@ -571,13 +625,15 @@ function renderTrabajadores() {
   
   lista.innerHTML = trabajadores.map(t => {
     const asignsHoy = getAsignaciones(t.id, fechaActual);
+    const ausenteHoy = ausencias.some(a => a.trabajadorId === t.id && a.fecha === fechaActual);
     if (asignsHoy.length === 0) {
       return `<div class="worker-item">
-        <div class="avatar" style="background:#78909C">${iniciales(t.nombre, t.apellidos)}</div>
+        <div class="avatar" style="background:${ausenteHoy ? '#C62828' : '#78909C'}">${iniciales(t.nombre, t.apellidos)}</div>
         <div style="flex:1">
           <div style="font-weight:700">${t.nombre} ${t.apellidos}</div>
-          <div><span class="obra-badge">Sin obra hoy</span></div>
+          <div>${ausenteHoy ? `<span class="ausente-badge">🚫 Ausente hoy</span><span style="font-size:11px;color:#C62828;">${ausencias.find(a=>a.trabajadorId===t.id&&a.fecha===fechaActual)?.motivo ? ' · ' + ausencias.find(a=>a.trabajadorId===t.id&&a.fecha===fechaActual).motivo : ''}</span>` : '<span class="obra-badge">Sin obra hoy</span>'}</div>
         </div>
+        <button class="btn-icon" title="Registrar falta hoy" onclick="abrirModalAusenciaRapida(${t.id}, '${fechaActual}')" style="font-size:18px;">🚫</button>
         <button class="btn-icon" onclick="editarTrabajador(${t.id})">✏️</button>
         <button class="btn-icon" onclick="eliminarTrabajador(${t.id})">🗑️</button>
       </div>`;
@@ -754,11 +810,13 @@ function renderCalendar() {
     const asignacionesDia = asignaciones.filter(a => a.fecha === fecha && (!filtroId || a.obraId === filtroId));
     const tieneHoras = asignacionesDia.some(a => a.horas > 0);
     const tieneFestivo = asignacionesDia.some(a => a.esFestivo === true) || festivosSet.has(fecha);
+    const tieneAusencias = ausencias.some(a => a.fecha === fecha);
     let clases = 'cal-day';
     if (fecha === fechaActual) clases += ' today';
     if (fecha === fechaSeleccionada) clases += ' selected';
     if (tieneHoras) clases += ' has-w';
     if (tieneFestivo) clases += ' has-fest';
+    if (tieneAusencias) clases += ' has-aus';
     
     html += `<div class="${clases}" onclick="seleccionarDia('${fecha}')">${d}</div>`;
   }
@@ -791,19 +849,53 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderPanelDia(filtroId) {
   document.getElementById('dw-title').textContent = '📋 ' + formatearFecha(fechaSeleccionada);
   let asignacionesDia = asignaciones.filter(a => a.fecha === fechaSeleccionada && (!filtroId || a.obraId === filtroId));
-  if (!asignacionesDia.length) { document.getElementById('dw-list').innerHTML = '<div class="empty-state">No hay trabajadores este día</div>'; return; }
-  document.getElementById('dw-list').innerHTML = asignacionesDia.map(a => {
-    const t = trabajadores.find(t => t.id === a.trabajadorId);
-    if (!t) return '';
-    const festivosSet = new Set(festivos.map(f => f.fecha));
-    const esFestivoGlobal = festivosSet.has(a.fecha);
-    const esFestivo = a.esFestivo || esFestivoGlobal;
-    return `<div style="display:flex;align-items:center;padding:10px 13px;border-bottom:1px solid #F0F4F8;gap:10px;cursor:pointer;" onclick="abrirEditarAsignacion('${a.fecha}', ${a.trabajadorId}, ${a.obraId})">
-      <div class="avatar" style="background:${colorObra(a.obraId)};width:36px;height:36px;font-size:12px;">${iniciales(t.nombre, t.apellidos)}</div>
-      <div style="flex:1"><div style="font-weight:700">${t.nombre} ${t.apellidos}</div><div><span style="font-size:12px;color:#78909C">${nombreObra(a.obraId)}</span><span class="horas-badge">🕒 ${a.horas}h</span>${esFestivo ? '<span class="festivo-badge">📅 Festivo</span>' : ''}</div></div>
-      <span style="color:#78909C;">✏️</span>
-    </div>`;
-  }).join('');
+  const ausenciasDia = ausencias.filter(a => a.fecha === fechaSeleccionada);
+  
+  let html = '';
+  
+  if (!asignacionesDia.length && !ausenciasDia.length) {
+    html = '<div class="empty-state">No hay trabajadores este día</div>';
+  } else {
+    // Asignaciones normales
+    html += asignacionesDia.map(a => {
+      const t = trabajadores.find(t => t.id === a.trabajadorId);
+      if (!t) return '';
+      const festivosSet = new Set(festivos.map(f => f.fecha));
+      const esFestivoGlobal = festivosSet.has(a.fecha);
+      const esFestivo = a.esFestivo || esFestivoGlobal;
+      return `<div style="display:flex;align-items:center;padding:10px 13px;border-bottom:1px solid #F0F4F8;gap:10px;cursor:pointer;" onclick="abrirEditarAsignacion('${a.fecha}', ${a.trabajadorId}, ${a.obraId})">
+        <div class="avatar" style="background:${colorObra(a.obraId)};width:36px;height:36px;font-size:12px;">${iniciales(t.nombre, t.apellidos)}</div>
+        <div style="flex:1"><div style="font-weight:700">${t.nombre} ${t.apellidos}</div><div><span style="font-size:12px;color:#78909C">${nombreObra(a.obraId)}</span><span class="horas-badge">🕒 ${a.horas}h</span>${esFestivo ? '<span class="festivo-badge">📅 Festivo</span>' : ''}</div></div>
+        <span style="color:#78909C;">✏️</span>
+      </div>`;
+    }).join('');
+  }
+  
+  // Sección de ausencias del día
+  if (ausenciasDia.length > 0) {
+    html += `<div class="ausencias-panel">
+      <div class="ausencias-panel-hdr"><span>🚫 Ausencias registradas (${ausenciasDia.length})</span></div>`;
+    html += ausenciasDia.map(a => {
+      const t = trabajadores.find(t => t.id === a.trabajadorId);
+      if (!t) return '';
+      return `<div class="ausencia-item">
+        <div class="falta-indicator">🚫</div>
+        <div style="flex:1">
+          <div style="font-weight:700">${t.nombre} ${t.apellidos}</div>
+          ${a.motivo ? `<div class="ausencia-motivo">${a.motivo}</div>` : '<div class="ausencia-motivo">Sin motivo indicado</div>'}
+        </div>
+        <button style="background:none;border:none;color:#C62828;font-size:18px;cursor:pointer;padding:0 8px;" onclick="eliminarAusencia(${a.trabajadorId}, '${a.fecha}')">🗑️</button>
+      </div>`;
+    }).join('');
+    html += '</div>';
+  }
+  
+  // Botón registrar ausencia
+  html += `<div style="padding:10px 13px;">
+    <button class="btn-add-falta" onclick="abrirModalAusencia('${fechaSeleccionada}')">🚫 Registrar ausencia en este día</button>
+  </div>`;
+  
+  document.getElementById('dw-list').innerHTML = html;
 }
 
 // ==================== EDITAR ASIGNACIÓN ====================
@@ -861,6 +953,68 @@ function eliminarAsignacion() {
   }
 }
 
+// ==================== AUSENCIAS / FALTAS ====================
+function abrirModalAusencia(fecha) {
+  document.getElementById('aus-fecha').value = fecha || fechaSeleccionada;
+  document.getElementById('aus-motivo-select').value = '';
+  document.getElementById('aus-motivo-otro-wrap').style.display = 'none';
+  document.getElementById('aus-motivo-otro').value = '';
+  const select = document.getElementById('aus-trabajador');
+  // Filtrar trabajadores que no tienen ya ausencia registrada ese día
+  const fechaVal = fecha || fechaSeleccionada;
+  const yaAusentes = ausencias.filter(a => a.fecha === fechaVal).map(a => a.trabajadorId);
+  select.innerHTML = trabajadores.length ? 
+    '<option value="">— Selecciona trabajador —</option>' + trabajadores.map(t => `<option value="${t.id}" ${yaAusentes.includes(t.id) ? 'disabled' : ''}>${t.nombre} ${t.apellidos}${yaAusentes.includes(t.id) ? ' (ya registrado)' : ''}</option>`).join('') :
+    '<option value="">No hay trabajadores</option>';
+  abrirModal('modal-ausencia');
+}
+
+function abrirModalAusenciaRapida(trabajadorId, fecha) {
+  // Si ya tiene ausencia ese día, eliminarla
+  const existe = ausencias.find(a => a.trabajadorId === trabajadorId && a.fecha === fecha);
+  if (existe) {
+    if (confirm(`¿Eliminar ausencia registrada para ${trabajadores.find(t=>t.id===trabajadorId)?.nombre}?`)) {
+      eliminarAusencia(trabajadorId, fecha);
+    }
+    return;
+  }
+  abrirModalAusencia(fecha);
+  // Pre-seleccionar el trabajador
+  setTimeout(() => { document.getElementById('aus-trabajador').value = trabajadorId; }, 50);
+}
+
+function actualizarMotivoAus() {
+  const val = document.getElementById('aus-motivo-select').value;
+  document.getElementById('aus-motivo-otro-wrap').style.display = val === 'otro' ? 'block' : 'none';
+}
+
+function guardarAusencia() {
+  const fecha = document.getElementById('aus-fecha').value;
+  const trabajadorId = parseInt(document.getElementById('aus-trabajador').value);
+  const selectVal = document.getElementById('aus-motivo-select').value;
+  let motivo = selectVal === 'otro' ? document.getElementById('aus-motivo-otro').value.trim() : selectVal;
+  
+  if (!fecha) { mostrarToast('⚠️ Selecciona una fecha'); return; }
+  if (!trabajadorId) { mostrarToast('⚠️ Selecciona un trabajador'); return; }
+  if (ausencias.some(a => a.trabajadorId === trabajadorId && a.fecha === fecha)) {
+    mostrarToast('⚠️ Este trabajador ya tiene ausencia ese día'); return;
+  }
+  
+  ausencias.push({ trabajadorId, fecha, motivo: motivo || '' });
+  guardarEnStorage();
+  cerrarModal('modal-ausencia');
+  renderTodo();
+  const t = trabajadores.find(t => t.id === trabajadorId);
+  mostrarToast(`🚫 Ausencia registrada: ${t ? t.nombre : ''} - ${formatearFecha(fecha)}`);
+}
+
+function eliminarAusencia(trabajadorId, fecha) {
+  ausencias = ausencias.filter(a => !(a.trabajadorId === trabajadorId && a.fecha === fecha));
+  guardarEnStorage();
+  renderTodo();
+  mostrarToast('✅ Ausencia eliminada');
+}
+
 // ==================== RESUMEN ====================
 function cambiarMesResumen(delta) {
   mesResumen += delta;
@@ -902,6 +1056,14 @@ function renderResumen() {
         const totalHorasO = dias.reduce((sum, d) => sum + d.horas, 0);
         html += `<div class="obra-detalle"><div class="obra-detalle-header"><div style="width:10px;height:10px;border-radius:50%;background:${colorObra(obraId)};"></div><span class="obra-detalle-nombre">${obra ? obra.nombre : 'Obra'}</span><span class="obra-detalle-total">${totalHorasO}h · ${dias.length} día${dias.length !== 1 ? 's' : ''}</span></div><div class="dias-grid">${dias.map(d => `<span class="dia-chip ${(d.esFestivoGlobal || d.esFestivoAsignacion) ? 'festivo' : ''}">${d.dia} (${d.horas}h)${(d.esFestivoGlobal || d.esFestivoAsignacion) ? ' 🎉' : ''}</span>`).join('')}</div></div>`;
       });
+      // Mostrar ausencias del mes
+      const ausenciasMes = ausencias.filter(a => a.trabajadorId === t.id && fechasMes.includes(a.fecha));
+      if (ausenciasMes.length > 0) {
+        html += `<div class="resumen-ausencias">
+          <div class="resumen-ausencias-titulo">🚫 Ausencias (${ausenciasMes.length} día${ausenciasMes.length !== 1 ? 's' : ''})</div>
+          <div>${ausenciasMes.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(a => `<span class="ausencia-chip" title="${a.motivo || 'Sin motivo'}">${parseInt(a.fecha.split('-')[2])}${a.motivo ? ' · ' + a.motivo : ''}</span>`).join('')}</div>
+        </div>`;
+      }
     }
   });
   html += '</div>';
@@ -951,7 +1113,7 @@ function eliminarFestivo(fecha) {
 
 // ==================== BACKUP Y EXPORTACIÓN ====================
 function exportarBackup() {
-  const payload = { _tipo: 'backup_control_trabajadores', _version: '2.0', _fecha: new Date().toISOString(), obras, trabajadores, asignaciones, festivos, siguienteIdTrabajador, siguienteIdObra };
+  const payload = { _tipo: 'backup_control_trabajadores', _version: '2.1', _fecha: new Date().toISOString(), obras, trabajadores, asignaciones, festivos, ausencias, siguienteIdTrabajador, siguienteIdObra };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -975,11 +1137,12 @@ function restaurarBackup(input) {
       trabajadores = parsed.trabajadores || [];
       asignaciones = parsed.asignaciones || [];
       festivos = parsed.festivos || [];
+      ausencias = parsed.ausencias || [];
       siguienteIdTrabajador = parsed.siguienteIdTrabajador || (Math.max(0, ...trabajadores.map(t => t.id)) + 1);
       siguienteIdObra = parsed.siguienteIdObra || (Math.max(0, ...obras.map(o => o.id)) + 1);
       guardarEnStorage();
       renderTodo();
-      mostrarToast(`✅ Restaurado: ${trabajadores.length} trabajadores, ${asignaciones.length} asignaciones`);
+      mostrarToast(`✅ Restaurado: ${trabajadores.length} trabajadores, ${asignaciones.length} asignaciones, ${ausencias.length} ausencias`);
     } catch(err) { mostrarToast('❌ Error al leer: ' + err.message); }
   };
   reader.readAsText(file);
@@ -1067,14 +1230,17 @@ function exportarParaManobracan() {
   const fechasMes = [];
   for (let d = 1; d <= diasEnMes; d++) fechasMes.push(`${año}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
   const asignacionesMes = asignaciones.filter(a => fechasMes.includes(a.fecha));
+  const ausenciasMes = ausencias.filter(a => fechasMes.includes(a.fecha));
   
-  if (asignacionesMes.length === 0) { mostrarToast('⚠️ No hay datos para exportar'); return; }
+  if (asignacionesMes.length === 0 && ausenciasMes.length === 0) { mostrarToast('⚠️ No hay datos para exportar'); return; }
   
   const festivosSet = new Set(festivos.map(f => f.fecha));
   
   const resumenTrabajadores = trabajadores.map(t => {
     const asigT = asignacionesMes.filter(a => a.trabajadorId === t.id);
-    if (asigT.length === 0) return null;
+    const ausT = ausenciasMes.filter(a => a.trabajadorId === t.id);
+    if (asigT.length === 0 && ausT.length === 0) return null;
+    
     const diasPorObra = {};
     asigT.forEach(a => {
       const obraObj = obras.find(o => o.id === a.obraId);
@@ -1087,31 +1253,59 @@ function exportarParaManobracan() {
       const esFestivo = esFestivoGlobal || (a.esFestivo === true);
       diasPorObra[nombreObra].push({ 
         dia: parseInt(a.fecha.split('-')[2]), 
+        fecha: a.fecha,
         horas: a.horas, 
         diaSemana: ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][diaSemana], 
         esFinSemana, 
         esFestivo: esFestivo
       });
     });
+
+    const ausenciasExport = ausT.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(a => {
+      const fecha = new Date(a.fecha);
+      const diaSemana = fecha.getDay();
+      return {
+        dia: parseInt(a.fecha.split('-')[2]),
+        fecha: a.fecha,
+        diaSemana: ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][diaSemana],
+        motivo: a.motivo || ''
+      };
+    });
+
     return { 
       id: t.id, 
       nombre: t.nombre, 
       apellidos: t.apellidos, 
       nombre_completo: `${t.nombre} ${t.apellidos}`, 
       total_horas: asigT.reduce((s,a)=>s+a.horas,0), 
-      total_dias: asigT.length, 
-      dias_por_obra: diasPorObra 
+      total_dias_trabajados: asigT.length,
+      total_dias_ausencia: ausT.length,
+      dias_por_obra: diasPorObra,
+      ausencias: ausenciasExport
     };
   }).filter(t => t !== null);
   
-  const exportData = { version: "2.0", generado: new Date().toISOString(), mes: nombreMes, año: año, trabajadores: resumenTrabajadores };
+  const totalAusencias = ausenciasMes.length;
+  const exportData = { 
+    version: "2.1", 
+    generado: new Date().toISOString(), 
+    mes: nombreMes, 
+    año: año,
+    resumen_mes: {
+      total_trabajadores: resumenTrabajadores.length,
+      total_horas: asignacionesMes.reduce((s,a)=>s+a.horas,0),
+      total_dias_trabajados: new Set(asignacionesMes.map(a=>a.fecha)).size,
+      total_ausencias: totalAusencias
+    },
+    trabajadores: resumenTrabajadores 
+  };
   const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `manobracan_${nombreMes}_${año}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
-  mostrarToast(`✅ Exportado: ${resumenTrabajadores.length} trabajadores (festivos marcados)`);
+  mostrarToast(`✅ Exportado: ${resumenTrabajadores.length} trabajadores · ${totalAusencias} ausencias`);
 }
 
 function enviarPorGmail() {
@@ -1130,10 +1324,12 @@ function enviarPorGmail() {
   const festivosSet = new Set(festivos.map(f => f.fecha));
   trabajadores.forEach(t => {
     const asigT = asignacionesMes.filter(a => a.trabajadorId === t.id);
-    if (asigT.length === 0) return;
+    const ausT = ausencias.filter(a => a.trabajadorId === t.id && fechasMes.includes(a.fecha));
+    if (asigT.length === 0 && ausT.length === 0) return;
     const totalHorasT = asigT.reduce((s,a)=>s+a.horas,0);
     const diasT = new Set(asigT.map(a=>a.fecha)).size;
-    contenido += `👷 ${t.nombre} ${t.apellidos} (${totalHorasT}h · ${diasT} días)\n`;
+    contenido += `👷 ${t.nombre} ${t.apellidos} (${totalHorasT}h · ${diasT} días trabajados)\n`;
+    if (ausT.length > 0) contenido += `   🚫 Ausencias: ${ausT.map(a => parseInt(a.fecha.split('-')[2]) + (a.motivo ? ' ('+a.motivo+')' : '')).join(', ')}\n`;
     const obrasT = {};
     asigT.forEach(a => { if (!obrasT[a.obraId]) obrasT[a.obraId] = []; obrasT[a.obraId].push({ dia: parseInt(a.fecha.split('-')[2]), horas: a.horas, esFestivo: a.esFestivo || festivosSet.has(a.fecha) }); });
     Object.keys(obrasT).forEach(obraId => {
