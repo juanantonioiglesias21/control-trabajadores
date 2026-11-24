@@ -184,6 +184,42 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
 .resumen-ausencias-titulo{font-size:11px;font-weight:800;color:#C62828;margin-bottom:6px;text-transform:uppercase;}
 .ausencia-chip{background:#FFCDD2;color:#B71C1C;padding:4px 9px;border-radius:12px;font-size:12px;font-weight:600;display:inline-block;margin:2px;}
 .falta-indicator{width:36px;height:36px;border-radius:50%;background:#FFEBEE;border:2px solid #C62828;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+
+/* Botón imprimir en resumen */
+.btn-print{background:#E3F2FD;border:none;border-radius:10px;width:36px;height:36px;font-size:17px;cursor:pointer;flex-shrink:0;margin-right:6px;}
+
+/* ===== HOJA DE IMPRESIÓN (A5) ===== */
+#print-area{display:none;}
+.hoja{font-family:Arial,Helvetica,sans-serif;color:#000;font-size:8.5pt;}
+.hoja h1{font-size:13pt;margin:0;display:inline;}
+.hoja .hoja-sub{font-size:9pt;color:#444;display:inline;margin-left:8px;}
+.hoja .cabecera{border-bottom:1.5px solid #000;padding-bottom:3px;margin-bottom:5px;}
+.hoja h2{font-size:11pt;margin:0 0 5px;}
+.hoja .totales{display:flex;gap:4px;margin-bottom:6px;}
+.hoja .total-box{flex:1;border:1px solid #000;padding:2px;text-align:center;}
+.hoja .total-box b{display:block;font-size:10.5pt;}
+.hoja .total-box span{font-size:6.5pt;}
+.hoja h3{font-size:9pt;margin:6px 0 2px;background:#eee;padding:2px 5px;border-left:3px solid #000;}
+.hoja table{width:100%;border-collapse:collapse;margin-bottom:2px;}
+.hoja th,.hoja td{border:1px solid #999;padding:1px 5px;font-size:8pt;text-align:left;line-height:1.25;}
+.hoja th{background:#ddd;}
+.hoja td.num,.hoja th.num{text-align:right;}
+.hoja tr.subtotal td{font-weight:bold;background:#f3f3f3;}
+.hoja .aus-tabla th{background:#f5d5d5;}
+.hoja .cols{column-count:2;column-gap:10px;}
+.hoja .cols h3{break-after:avoid;margin-top:0;margin-bottom:2px;}
+.hoja .cols .bloque{break-inside:avoid-column;margin-bottom:6px;}
+.hoja .cols table{margin-bottom:0;}
+.hoja .cols tr{break-inside:avoid;}
+.hoja .cols th,.hoja .cols td{font-size:7.5pt;padding:1px 3px;}
+.hoja .pie{margin-top:6px;font-size:6.5pt;color:#666;}
+@media print{
+  body > *:not(#print-area){display:none !important;}
+  #print-area{display:block !important;}
+  .hoja{page-break-after:always;}
+  .hoja:last-child{page-break-after:auto;}
+  @page{size:A5 portrait;margin:8mm;}
+}
 </style>
 </head>
 <body>
@@ -277,6 +313,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-s
   <div class="resumen-actions">
     <button class="btn-gmail" onclick="enviarPorGmail()">📧 Enviar por Gmail</button>
     <button class="btn-gmail" style="background:#1565C0;" onclick="exportarParaManobracan()">💾 Exportar a Manobracan</button>
+    <button class="btn-gmail" style="background:#455A64;" onclick="imprimirTodos()">🖨️ Imprimir todos</button>
   </div>
   
   <div id="resumen-contenido"></div>
@@ -1053,6 +1090,7 @@ function renderResumen() {
     html += `<div class="trabajador-resumen ${activo ? 'activo' : ''}" onclick="seleccionarTrabajador(${t.id})">
       <div class="avatar" style="background:${colorObra(asigT[0].obraId)};width:40px;height:40px;">${iniciales(t.nombre, t.apellidos)}</div>
       <div class="trabajador-info"><div class="trabajador-nombre">${t.nombre} ${t.apellidos}</div><div class="trabajador-total">${totalHorasT}h · ${totalDiasT} día${totalDiasT !== 1 ? 's' : ''}</div></div>
+      <button class="btn-print" title="Imprimir hoja de ${t.nombre}" onclick="event.stopPropagation();imprimirTrabajador(${t.id})">🖨️</button>
       <span style="color:#1565C0;">${activo ? '▼' : '▶'}</span>
     </div>`;
     if (activo) {
@@ -1080,6 +1118,99 @@ function renderResumen() {
 }
 
 function seleccionarTrabajador(id) { trabajadorSeleccionado = trabajadorSeleccionado === id ? null : id; renderResumen(); }
+
+// ==================== IMPRIMIR HOJA POR TRABAJADOR ====================
+function hojaTrabajadorHTML(t) {
+  const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const DIAS_C = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const prefijo = `${añoResumen}-${String(mesResumen + 1).padStart(2,'0')}-`;
+  const festivosSet = new Set(festivos.map(f => f.fecha));
+  const asigT = asignaciones.filter(a => a.trabajadorId === t.id && a.fecha.startsWith(prefijo)).sort((a,b) => a.fecha.localeCompare(b.fecha));
+  const ausT = ausencias.filter(a => a.trabajadorId === t.id && a.fecha.startsWith(prefijo)).sort((a,b) => a.fecha.localeCompare(b.fecha));
+  if (!asigT.length && !ausT.length) return '';
+
+  const tipoDia = (fecha, esFestivoAsig) => {
+    const ds = new Date(fecha).getDay();
+    if (esFestivoAsig || festivosSet.has(fecha)) return 'Festivo';
+    return (ds === 0 || ds === 6) ? 'Fin sem.' : 'Laboral';
+  };
+
+  const totalHoras = asigT.reduce((s,a) => s + a.horas, 0);
+  const fechasUnicas = [...new Set(asigT.map(a => a.fecha))];
+  let laborales = 0, finSemana = 0, festivosN = 0;
+  fechasUnicas.forEach(f => {
+    const esFest = asigT.some(a => a.fecha === f && a.esFestivo) || festivosSet.has(f);
+    const ds = new Date(f).getDay();
+    if (esFest) festivosN++; else if (ds === 0 || ds === 6) finSemana++; else laborales++;
+  });
+
+  // Agrupar por obra
+  const porObra = {};
+  asigT.forEach(a => { (porObra[a.obraId] = porObra[a.obraId] || []).push(a); });
+
+  let html = `<div class="hoja">
+    <div class="cabecera"><h1>Hoja de trabajo</h1><span class="hoja-sub">${MESES[mesResumen]} ${añoResumen}</span></div>
+    <h2>👷 ${t.nombre} ${t.apellidos}</h2>
+    <div class="totales">
+      <div class="total-box"><b>${totalHoras}h</b><span>Horas totales</span></div>
+      <div class="total-box"><b>${fechasUnicas.length}</b><span>Días trabajados</span></div>
+      <div class="total-box"><b>${laborales}</b><span>Laborales</span></div>
+      <div class="total-box"><b>${finSemana}</b><span>Fin de semana</span></div>
+      <div class="total-box"><b>${festivosN}</b><span>Festivos</span></div>
+      <div class="total-box"><b>${ausT.length}</b><span>Ausencias</span></div>
+    </div>
+    <div class="cols">`;
+
+  Object.keys(porObra).forEach(obraId => {
+    const obra = obras.find(o => o.id == obraId);
+    const regs = porObra[obraId];
+    const horasObra = regs.reduce((s,a) => s + a.horas, 0);
+    html += `<div class="bloque"><h3>🏗️ ${obra ? obra.nombre : 'Obra'}</h3>
+    <table><thead><tr><th>Día</th><th>Sem.</th><th>Tipo</th><th class="num">Horas</th></tr></thead><tbody>`;
+    regs.forEach(a => {
+      const ds = new Date(a.fecha).getDay();
+      html += `<tr><td>${parseInt(a.fecha.split('-')[2])}</td><td>${DIAS_C[ds]}</td><td>${tipoDia(a.fecha, a.esFestivo)}</td><td class="num">${a.horas}h</td></tr>`;
+    });
+    html += `<tr class="subtotal"><td colspan="3">Total (${regs.length} día${regs.length !== 1 ? 's' : ''})</td><td class="num">${horasObra}h</td></tr></tbody></table></div>`;
+  });
+
+  if (ausT.length) {
+    html += `<div class="bloque"><h3>🚫 Días no trabajados</h3>
+    <table class="aus-tabla"><thead><tr><th>Día</th><th>Sem.</th><th>Motivo</th></tr></thead><tbody>`;
+    ausT.forEach(a => {
+      const ds = new Date(a.fecha).getDay();
+      html += `<tr><td>${parseInt(a.fecha.split('-')[2])}</td><td>${DIAS_C[ds]}</td><td>${a.motivo || 'Sin motivo'}</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
+  html += `</div>`;
+  html += `<div class="pie">Generado el ${new Date().toLocaleDateString('es-ES')} · Control Trabajadores</div>
+  </div>`;
+  return html;
+}
+
+function lanzarImpresion(html) {
+  let area = document.getElementById('print-area');
+  if (!area) { area = document.createElement('div'); area.id = 'print-area'; document.body.appendChild(area); }
+  area.innerHTML = html;
+  setTimeout(() => window.print(), 150);
+}
+window.addEventListener('afterprint', () => { const a = document.getElementById('print-area'); if (a) a.innerHTML = ''; });
+
+function imprimirTrabajador(id) {
+  const t = trabajadores.find(t => t.id === id);
+  if (!t) return;
+  const html = hojaTrabajadorHTML(t);
+  if (!html) { mostrarToast('⚠️ Sin datos de ' + t.nombre + ' este mes'); return; }
+  lanzarImpresion(html);
+}
+
+function imprimirTodos() {
+  const html = trabajadores.map(t => hojaTrabajadorHTML(t)).join('');
+  if (!html) { mostrarToast('⚠️ No hay datos este mes'); return; }
+  lanzarImpresion(html);
+}
 
 // ==================== FESTIVOS GLOBALES ====================
 function renderFestivos() {
@@ -1448,7 +1579,11 @@ if (!localStorage.getItem('guia_instalacion_cerrada') && !window.matchMedia('(di
 }
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err)); });
+  window.addEventListener('load', () => {
+    fetch('sw.js', { method: 'HEAD' })
+      .then(r => { if (r.ok) return navigator.serviceWorker.register('sw.js'); })
+      .catch(() => {});
+  });
 }
 </script>
 </body>
